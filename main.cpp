@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
   std::cout << "Number of matches: " << c.matches << std::endl;
 
   std::cout << "Writing to file...\n";
-  c.writeToFile("output.root");
+  c.writeToFile("test.root");
   
   return 0;
 }

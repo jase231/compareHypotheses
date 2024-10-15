@@ -94,9 +94,16 @@ void compareHypotheses::prepareData() {
 
 // writes alternative chisq values into new branch. if no match is found, placeholder chisq is written instead.
 void compareHypotheses::writeToFile(std::string outFile) {
+  // replace output filename placeholder (see class declaration) with tree name from member function
+  if (outFile == "placeholder") {
+    outFile = tree2.getTreeName() + "_hypothesesMatched";
+  }
+
   // Capture matchedChiSqs by reference
   auto& matchedChiSqsRef = matchedChiSqs;
+  // helper variable for cleaner Define call
   auto newBranchName = tree2.getTreeName() + "_chisq_ndf";
+
   auto df3 = tree1.df.Define(newBranchName, [&matchedChiSqsRef](unsigned long long event) {
     // check if event is in matchedChiSqs
     if (matchedChiSqsRef.find(event) != matchedChiSqsRef.end()) {
@@ -105,5 +112,7 @@ void compareHypotheses::writeToFile(std::string outFile) {
       return static_cast<float>(185100000.0);    // using large number to indicate no match
     }
   }, {"event"});
-  df3.Snapshot("testTree", outFile);
+
+  // write the newly defined RDataFrame to the file specified by user or the default arg
+  df3.Snapshot("hypothesesMatched", outFile);
 }

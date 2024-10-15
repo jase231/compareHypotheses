@@ -69,5 +69,5 @@ class compareHypotheses {
     std::map<unsigned long long, float> matchedChiSqs;
     bool isVerbose() const { return verbose; }
     bool setVerbose(bool v) { verbose = v; }
-    void writeToFile(std::string outFile);
+    void writeToFile(std::string outFile = "placeholder");
 };
