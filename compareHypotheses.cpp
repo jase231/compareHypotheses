@@ -94,9 +94,9 @@ void compareHypotheses::prepareData() {
 
 // writes alternative chisq values into new branch. if no match is found, placeholder chisq is written instead.
 void compareHypotheses::writeToFile(std::string outFile) {
-  // replace output filename placeholder (see class declaration) with tree name from member function
+  // replace output filename placeholder (see main.cpp) with tree name from member function
   if (outFile == "placeholder") {
-    outFile = tree2.getTreeName() + "_hypothesesMatched";
+    outFile = tree2.getTreeName() + "_hypothesesMatched.root";
   }
 
   // Capture matchedChiSqs by reference

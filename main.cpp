@@ -17,9 +17,10 @@ int main(int argc, char* argv[]) {
 
   // get the file and tree names from args
   std::string file1, file2, tree1, tree2;
+  std::string outFile = "placeholder";
   int setCounter = 0;
   bool verbose = false;
-
+  
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "--help") == 0) {
       std::cout << "Usage: " << argv[0] << " --file1 <file1.root> --tree1 <tree1> --file2 <file2.root> --tree2 <tree2>\n";
@@ -37,6 +38,9 @@ int main(int argc, char* argv[]) {
       setCounter++;
     } else if (strcmp(argv[i], "--verbose") == 0 || strcmp(argv[i], "-v") == 0) {
       verbose = true;
+    } else if (strcmp(argv[i], "--outfile") == 0 || strcmp(argv[i], "-o") == 0) {
+      // TODO: check that filename is valid
+      outFile = argv[i+1];
     }
   }
 
@@ -59,7 +63,7 @@ int main(int argc, char* argv[]) {
   std::cout << "Number of matches: " << c.matches << std::endl;
 
   std::cout << "Writing to file...\n";
-  c.writeToFile("test.root");
+  c.writeToFile(outFile);
   
   return 0;
 }
