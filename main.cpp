@@ -20,7 +20,8 @@ int main(int argc, char* argv[]) {
   std::string outFile = "placeholder";
   int setCounter = 0;
   bool verbose = false;
-  
+  bool bestByBeam = false;  // find best overall combo by default
+
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "--help") == 0) {
       std::cout << "Usage: " << argv[0] << " --file1 <file1.root> --tree1 <tree1> --file2 <file2.root> --tree2 <tree2>\n";
@@ -41,6 +42,8 @@ int main(int argc, char* argv[]) {
     } else if (strcmp(argv[i], "--outfile") == 0 || strcmp(argv[i], "-o") == 0) {
       // TODO: check that filename is valid
       outFile = argv[i+1];
+    } else if (strcmp(argv[i], "--bestperbeam") == 0 || strcmp(argv[i], "-bb") == 0) {
+        bestByBeam = true;
     }
   }
 
@@ -49,13 +52,18 @@ int main(int argc, char* argv[]) {
     std::cerr << "Missing required parameters. ";
     std::cout << "Usage: " << argv[0] << " --file1 <file1.root> --tree1 <tree1> --file2 <file2.root> --tree2 <tree2>\n";
     return 1;
-  
-  
+  }
+
+  if (bestByBeam) {
+    std::cout << "Running in best combo per beam ID mode.\n";
+  } else {
+    std::cout << "Running in best overall combo mode. To run in best combo per beam ID mode, pass the -bb flag.\n";
   }
   std::cout << "Pre-processing data..." << std::endl;
-  compareHypotheses c(file1, tree1, file2, tree2);
+  compareHypotheses c(file1, tree1, file2, tree2, bestByBeam);
   c.setVerbose(verbose);
-
+  c.setMatchByBeam(bestByBeam);
+  
   c.prepareData();
   std::cout << "Data prepared, finding matches..." << std::endl;
   c.findMatches();

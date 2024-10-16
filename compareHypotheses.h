@@ -37,23 +37,27 @@ class combo {
 class hypothesisTree {
   
   public:
-    hypothesisTree(std::string fileName, std::string treeName);
+    hypothesisTree(std::string fileName, std::string treeName, bool matchType);
     void updateComboData(size_t index);
-    void filterHighChiSqEvents();
+    void filterHighChiSqEventsByBeam();
+    void filterHighChiSqEventsByEvent();
     void fillColumnVecs();
-    bool containsEventID(unsigned int key) const;
-
+    bool containsEventID(unsigned long long) const;
+    bool containsEventIDAndBeam(std::pair<unsigned long long, unsigned>) const;
+    
     ROOT::RDataFrame df;
     std::vector<unsigned long long> eventColumnData;
     std::vector<unsigned int> runColumnData;
     std::vector<unsigned int> beamColumnData;
     std::vector<float> chiSqColumnData;
     std::vector<unsigned> ndfColumnData;
-    std::map<unsigned long long, combo> events;
+    std::map<std::pair<unsigned long long, unsigned>, combo> eventBeamAsKeyMap;
+    std::map<unsigned long long, combo> eventAsKeyMap;
     std::string getTreeName() const { return treeName; }
 
   private:
     std::string treeName;
+    bool matchByBestPerBeam;
 };
 
 class compareHypotheses {
@@ -61,13 +65,16 @@ class compareHypotheses {
     hypothesisTree tree1;
     hypothesisTree tree2;
     bool verbose;
+    bool matchByBestPerBeam;
   public:
-    compareHypotheses(std::string file1, std::string tree1, std::string file2, std::string tree2);
+    compareHypotheses(std::string file1, std::string tree1, std::string file2, std::string tree2, bool matchType);
     void findMatches();
     void prepareData();
     uint matches;
+    std::map<std::pair<unsigned long long, unsigned>, float> matchedChiSqsByBeam;
     std::map<unsigned long long, float> matchedChiSqs;
     bool isVerbose() const { return verbose; }
-    bool setVerbose(bool v) { verbose = v; }
+    void setVerbose(bool v) { verbose = v; }
+    void setMatchByBeam(bool b) { matchByBestPerBeam = b; }
     void writeToFile(std::string outFile);
 };
