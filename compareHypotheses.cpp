@@ -106,11 +106,6 @@ void compareHypotheses::findMatches() {
 
     for (const auto& pair : tree1.eventBeamAsKeyMap) {
     if (tree2.containsEventIDAndBeam(pair.first)) {
-      if (tree2.eventBeamAsKeyMap[pair.first].getRun() != pair.second.getRun() || 
-          tree2.eventBeamAsKeyMap[pair.first].getBeamID() != pair.second.getBeamID()) {
-        continue;
-      }
-
       matchedChiSqsByBeam[pair.first] = tree2.eventBeamAsKeyMap[pair.first].getChiSq() / tree2.eventBeamAsKeyMap[pair.first].getNDF();
       matches++;
       os << "Event ID: " << (pair.first).first << " found in both trees. Run IDs: " << pair.second.getRun() << ',' << tree2.eventBeamAsKeyMap[pair.first].getRun() <<
@@ -125,11 +120,6 @@ void compareHypotheses::findMatches() {
   // matchByBestPerBeam false, match by best overall combo (<unsigned long long, combo> eventAsKey map)
   for (const auto& pair : tree1.eventAsKeyMap) {
     if (tree2.containsEventID(pair.first)) {
-      if (tree2.eventAsKeyMap[pair.first].getRun() != pair.second.getRun() || 
-          tree2.eventAsKeyMap[pair.first].getBeamID() != pair.second.getBeamID()) {
-        continue;
-      }
-
       matchedChiSqs[pair.first] = tree2.eventAsKeyMap[pair.first].getChiSq() / tree2.eventAsKeyMap[pair.first].getNDF();
       matches++;
       os << "Event ID: " << pair.first << " found in both trees. Run IDs: " << pair.second.getRun() << ',' << tree2.eventAsKeyMap[pair.first].getRun() <<
