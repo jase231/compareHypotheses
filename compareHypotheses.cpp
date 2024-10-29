@@ -106,6 +106,9 @@ void compareHypotheses::findMatches() {
 
     for (const auto& pair : tree1.eventBeamAsKeyMap) {
     if (tree2.containsEventIDAndBeam(pair.first)) {
+      // check if run IDs also match
+      if (tree2.eventBeamAsKeyMap[pair.first].getRun() != pair.second.getRun()) { continue; }
+
       matchedChiSqsByBeam[pair.first] = tree2.eventBeamAsKeyMap[pair.first].getChiSq() / tree2.eventBeamAsKeyMap[pair.first].getNDF();
       matches++;
       os << "Event ID: " << (pair.first).first << " found in both trees. Run IDs: " << pair.second.getRun() << ',' << tree2.eventBeamAsKeyMap[pair.first].getRun() <<
@@ -120,6 +123,9 @@ void compareHypotheses::findMatches() {
   // matchByBestPerBeam false, match by best overall combo (<unsigned long long, combo> eventAsKey map)
   for (const auto& pair : tree1.eventAsKeyMap) {
     if (tree2.containsEventID(pair.first)) {
+      // check if run IDs also match
+      if (tree2.eventAsKeyMap[pair.first].getRun() != pair.second.getRun()) { continue; }
+
       matchedChiSqs[pair.first] = tree2.eventAsKeyMap[pair.first].getChiSq() / tree2.eventAsKeyMap[pair.first].getNDF();
       matches++;
       os << "Event ID: " << pair.first << " found in both trees. Run IDs: " << pair.second.getRun() << ',' << tree2.eventAsKeyMap[pair.first].getRun() <<
@@ -143,7 +149,6 @@ void compareHypotheses::prepareData() {
   tree1.filterHighChiSqEventsByEvent();
   tree2.fillColumnVecs();
   tree2.filterHighChiSqEventsByEvent();
-
 }
 
 // writes alternative chisq values into new branch. if no match is found, placeholder chisq is written instead.
