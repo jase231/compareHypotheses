@@ -15,12 +15,14 @@
 
 class combo {
   public:
+    // getters for member data
     unsigned long long getEvent() const { return event; }
     unsigned int getRun() const { return run; }
     unsigned int getBeamID() const { return beam_beamid; }
     float getChiSq() const { return kin_chisq; }
     unsigned getNDF() const { return kin_ndf; }
 
+    // setters for member data
     void setChiSq(float chiSq) { kin_chisq = chiSq; }
     void setEvent(unsigned long long e) { event = e; }
     void setRun(unsigned int r) { run = r; }
@@ -37,23 +39,39 @@ class combo {
 class hypothesisTree {
   
   public:
-    hypothesisTree(std::string fileName, std::string treeName);
-    void updateComboData(size_t index);
-    void filterHighChiSqEvents();
-    void fillColumnVecs();
-    bool containsEventID(unsigned int key) const;
+    hypothesisTree(std::string fileName, std::string treeName, bool matchType);
 
+    // data preperation functions
+    void updateComboData(size_t index);
+    void filterHighChiSqEventsByBeam();
+    void filterHighChiSqEventsByEvent();
+    void fillColumnVecs();
+
+    // check whether matching criteria is already mapped in their respective combo maps
+    bool containsEventID(unsigned long long) const;
+    bool containsEventIDAndBeam(std::pair<unsigned long long, unsigned>) const;
+
+    // helper for getting tree name
+    std::string getTreeName() const { return treeName; }
+    
+    // RDataFrame
     ROOT::RDataFrame df;
+
+    // ColumnData vectors
     std::vector<unsigned long long> eventColumnData;
     std::vector<unsigned int> runColumnData;
     std::vector<unsigned int> beamColumnData;
     std::vector<float> chiSqColumnData;
     std::vector<unsigned> ndfColumnData;
-    std::map<unsigned long long, combo> events;
-    std::string getTreeName() const { return treeName; }
+
+    // combo maps
+    std::map<std::pair<unsigned long long, unsigned>, combo> eventBeamAsKeyMap;
+    std::map<unsigned long long, combo> eventAsKeyMap;
+    
 
   private:
     std::string treeName;
+    bool matchByBestPerBeam;  // whether matching by best combo per beam is used
 };
 
 class compareHypotheses {
@@ -61,13 +79,28 @@ class compareHypotheses {
     hypothesisTree tree1;
     hypothesisTree tree2;
     bool verbose;
+    bool matchByBestPerBeam;  // whether matching by best combo per beam is used
   public:
-    compareHypotheses(std::string file1, std::string tree1, std::string file2, std::string tree2);
-    void findMatches();
+    compareHypotheses(std::string file1, std::string tree1, std::string file2, std::string tree2, bool matchType);
+    
+    // calls each tree's data preperation functions
     void prepareData();
-    uint matches;
-    std::map<unsigned long long, float> matchedChiSqs;
-    bool isVerbose() const { return verbose; }
-    bool setVerbose(bool v) { verbose = v; }
+
+    // performs combo matching between each tree's combo map
+    void findMatches();
+
+    // outputs into a new branch in a clone of the primary RDataFrame
     void writeToFile(std::string outFile);
+
+    // counter for number of matches
+    uint matches;
+
+    // maps for storing chisq of matched combos from secondary tree
+    std::map<std::pair<unsigned long long, unsigned>, float> matchedChiSqsByBeam;
+    std::map<unsigned long long, float> matchedChiSqs;
+
+    // helpers and member data setters
+    bool isVerbose() const { return verbose; }
+    void setVerbose(bool v) { verbose = v; }
+    void setMatchByBeam(bool b) { matchByBestPerBeam = b; }
 };
