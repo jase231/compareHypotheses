@@ -75,6 +75,7 @@ Two matching modes are available:
 - [ ] Output option for matched-only combos
 - [ ] Generic implementation of matching logic
 - [ ] Enhanced edge case handling for multiple equivalent matches
+- [ ] Benchmarking support
 
 ## Authors
 
