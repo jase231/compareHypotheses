@@ -12,8 +12,14 @@
 #include <sstream>
 #include <cstddef>
 #include "compareHypotheses.h"
+#include <chrono>
+
+using namespace std::chrono;
 
 int main(int argc, char* argv[]) {
+  // init benchmarking
+  high_resolution_clock::time_point t1 = high_resolution_clock::now();
+
 
   // get the file and tree names from args
   std::string file1, file2, tree1, tree2;
@@ -70,8 +76,20 @@ int main(int argc, char* argv[]) {
 
   std::cout << "Number of matches: " << c.matches << std::endl;
 
+  // benchmark the matching process
+  high_resolution_clock::time_point t2 = high_resolution_clock::now();
+  auto matchingDuration = duration_cast<microseconds>( t2 - t1 ).count();
+  std::cout << "The matching process took: " << matchingDuration*1E-6 << " seconds\n";
+
+
+
   std::cout << "Writing to file...\n";
   c.writeToFile(outFile);
-  
+
+  // benchmark the writing-to-file
+  high_resolution_clock::time_point t3 = high_resolution_clock::now();
+  auto writeDuration = duration_cast<microseconds>( t3 - t2 ).count();
+  std::cout << "The file-writing process took: " << writeDuration*1E-6 << " seconds\n";
+
   return 0;
 }
