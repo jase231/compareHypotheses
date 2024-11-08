@@ -69,6 +69,9 @@ Two matching modes are available:
 1. Best Overall Combo: Selects the combo with lowest χ² per event
 2. Best Per Beam ID: Selects the combo with lowest χ² for each unique event+beam ID pair; to be used alongside accidental subtraction
 
+## Performance
+The performance of the tool is limited by the ROOT library's I/O efficiency. In a test run comparing two trees with around 300,000 events each, the matching process takes 2 or 3 seconds for best overall mode and best per beam matching mode, respectively. Writing the output to file using the ROOT library takes 30 seconds.
+
 ## Future Development
 
 - [ ] Implementation of MC generated beam energy data support
