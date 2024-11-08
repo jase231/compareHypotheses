@@ -83,3 +83,7 @@ The performance of the tool is limited by the ROOT library's I/O efficiency. In 
 ## Authors
 
 Jake Serwe - Florida State University
+
+## Credit
+
+This tool is intended as a successor to Alex Barnes' [mergeTrees.C](https://github.com/JeffersonLab/halld_recon/tree/2ae9aa0b7569f847c54d5714af3139ec53f87e3c/src/programs/Utilities/mergeTrees)
