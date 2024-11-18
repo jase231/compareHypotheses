@@ -69,14 +69,21 @@ Two matching modes are available:
 1. Best Overall Combo: Selects the combo with lowest χ² per event
 2. Best Per Beam ID: Selects the combo with lowest χ² for each unique event+beam ID pair; to be used alongside accidental subtraction
 
+## Performance
+The performance of the tool is limited by the ROOT library's I/O efficiency. In a test run comparing two trees with around 300,000 events each, the matching process takes 2 seconds for best overall mode and 3 seconds for best per beam matching mode. Writing the output to file using the ROOT library takes 30 seconds.
+
 ## Future Development
 
+- [X] Benchmarking support
 - [ ] Implementation of MC generated beam energy data support
 - [ ] Output option for matched-only combos
 - [ ] Generic implementation of matching logic
 - [ ] Enhanced edge case handling for multiple equivalent matches
-- [ ] Benchmarking support
 
 ## Authors
 
 Jake Serwe - Florida State University
+
+## Credit
+
+This tool is intended as a successor to Alex Barnes' [mergeTrees.C](https://github.com/JeffersonLab/halld_recon/tree/2ae9aa0b7569f847c54d5714af3139ec53f87e3c/src/programs/Utilities/mergeTrees)
