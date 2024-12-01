@@ -12,8 +12,9 @@
 #include <tuple>
 #include <sstream>
 #include <cstddef>
+#include <chrono>
 
-class combo {
+struct combo {
   public:
     // getters for member data
     unsigned long long getEvent() const { return event; }
@@ -37,7 +38,6 @@ class combo {
 };
 
 class hypothesisTree {
-  
   public:
     hypothesisTree(std::string fileName, std::string treeName, bool matchType);
 
