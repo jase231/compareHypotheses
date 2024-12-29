@@ -16,19 +16,22 @@
 #include <limits>
 
 // constructor for the hypothesis trees. passes input directly to RDataFrame constructor.
-hypothesisTree::hypothesisTree(std::string fileName, std::string tName, bool matchType) : df(ROOT::RDataFrame(tName, fileName)), treeName(tName), matchByBestPerBeam(matchType) {}
+hypothesisTreeBase::hypothesisTreeBase(std::string fileName, std::string treeName, bool matchType)
+    : df(ROOT::RDataFrame(treeName, fileName)), 
+      treeName(treeName),
+      matchByBestPerBeam(matchType) {}
 
-// checks whether the tree`'s event map contains a combo of event ID "eventID"
-bool hypothesisTree::containsEventID(unsigned long long eventID) const {
-    return (eventAsKeyMap.find(eventID) != eventAsKeyMap.end());
-}
+
 // same as containsEventID() but uses std::pair as key. to be replaced with template.
-bool hypothesisTree::containsEventIDAndBeam(std::pair<unsigned long long, unsigned> pair_key) const {
+bool hypothesisTreeBase::containsEventID(std::pair<unsigned long long, unsigned> pair_key) const {
+  if (!matchByBestPerBeam) {
+    return (eventAsKeyMap.find(pair_key.first) != eventAsKeyMap.end());
+  }
   return (eventBeamAsKeyMap.find(pair_key) != eventBeamAsKeyMap.end());
 }
 
 // loads relevant columns from the RDataFrame
-void hypothesisTree::fillColumnVecs() {
+void hypothesisTreeBase::fillColumnVecs() {
     eventColumnData = *df.Take<unsigned long long>("event");
     runColumnData = *df.Take<unsigned int>("run");
     beamColumnData = *df.Take<unsigned int>("beam_beamid");
@@ -37,18 +40,7 @@ void hypothesisTree::fillColumnVecs() {
 }
 
 // fill each combo with data from the data columns
-void hypothesisTree::updateComboData(size_t index) {
-  // fill the eventBeamAsKey map using newly created std::pair as key
-  if (matchByBestPerBeam) {
-    auto pair_key = std::make_pair(eventColumnData[index], beamColumnData[index]);
-
-    eventBeamAsKeyMap[pair_key].setChiSq(chiSqColumnData[index]);
-    eventBeamAsKeyMap[pair_key].setEvent(eventColumnData[index]);
-    eventBeamAsKeyMap[pair_key].setRun(runColumnData[index]);
-    eventBeamAsKeyMap[pair_key].setBeam(beamColumnData[index]);
-    eventBeamAsKeyMap[pair_key].setNDF(ndfColumnData[index]);
-    return;
-  }
+void hypothesisTreeBestCombo::updateComboData(size_t index) {
   // set eventAsKey map using event ID as key
   eventAsKeyMap[eventColumnData[index]].setChiSq(chiSqColumnData[index]);
   eventAsKeyMap[eventColumnData[index]].setEvent(eventColumnData[index]);
@@ -57,34 +49,64 @@ void hypothesisTree::updateComboData(size_t index) {
   eventAsKeyMap[eventColumnData[index]].setNDF(ndfColumnData[index]);
 }
 
-// for every row, remove duplicate rows (by shared event ID) and keep only combo lowest chisq
-void hypothesisTree::filterHighChiSqEventsByBeam() {
-    for (size_t i = 0; i < eventColumnData.size(); ++i) {
-        if (!containsEventIDAndBeam(std::make_pair(eventColumnData[i], beamColumnData[i]))) {
-            updateComboData(i);
-        } else {
-            if (eventBeamAsKeyMap[std::make_pair(eventColumnData[i], beamColumnData[i])].getChiSq() > chiSqColumnData[i]) {
-                updateComboData(i);
-            }
-        }
-    }
+// set combo data for best combo per beam
+void hypothesisTreeBestPerBeam::updateComboData(size_t index) {
+  // set eventBeamAsKey map using event ID and beam ID as key
+  auto pair_key = std::make_pair(eventColumnData[index], beamColumnData[index]);
+
+  eventBeamAsKeyMap[pair_key].setChiSq(chiSqColumnData[index]);
+  eventBeamAsKeyMap[pair_key].setEvent(eventColumnData[index]);
+  eventBeamAsKeyMap[pair_key].setRun(runColumnData[index]);
+  eventBeamAsKeyMap[pair_key].setBeam(beamColumnData[index]);
+  eventBeamAsKeyMap[pair_key].setNDF(ndfColumnData[index]);
+  return;
 }
 
-void hypothesisTree::filterHighChiSqEventsByEvent() {
+// for every row, remove duplicate rows (by shared event ID) and keep only combo lowest chisq
+void hypothesisTreeBestCombo::filterHighChiSqEvents() {
+  for (size_t i = 0; i < eventColumnData.size(); ++i) {
+    auto pair_key = std::make_pair(eventColumnData[i], 1851); // placeholder beam ID
+    if (!containsEventID(pair_key)) {
+      updateComboData(i);
+    } else {
+      if (eventAsKeyMap[eventColumnData[i]].getChiSq() > chiSqColumnData[i]) {
+        updateComboData(i);
+      }
+    }
+  }
+}
+
+void hypothesisTreeBestPerBeam::filterHighChiSqEvents() {
     for (size_t i = 0; i < eventColumnData.size(); ++i) {
-        if (!containsEventID(eventColumnData[i])) {
-            updateComboData(i);
-        } else {
-            if (eventAsKeyMap[eventColumnData[i]].getChiSq() > chiSqColumnData[i]) {
-                updateComboData(i);
-            }
+      auto pair_key = std::make_pair(eventColumnData[i], beamColumnData[i]);
+      if (!containsEventID(pair_key)) {
+        updateComboData(i);
+      } else {
+        if (eventBeamAsKeyMap[pair_key].getChiSq() > chiSqColumnData[i]) {
+          updateComboData(i);
         }
+      }
     }
 }
 
 // constructor for compareHypotheses manager class. initializes two hypothesisTrees and the match counter.
-compareHypotheses::compareHypotheses(std::string f1, std::string t1, std::string f2, std::string t2, bool matchType)
-                                                         : tree1(f1, t1, matchType), tree2(f2, t2, matchType), matches(0), matchByBestPerBeam(matchType) {}
+compareHypotheses::compareHypotheses(std::string f1, std::string t1, std::string f2, std::string t2, bool matchType) : matches(0), matchByBestPerBeam(matchType) {
+  if (matchByBestPerBeam) {
+    tree1 = new hypothesisTreeBestPerBeam(f1, t1, matchType);
+    tree2 = new hypothesisTreeBestPerBeam(f2, t2, matchType);
+} else {
+    tree1 = new hypothesisTreeBestCombo(f1, t1, matchType);
+    tree2 = new hypothesisTreeBestCombo(f2, t2, matchType);
+}
+}
+
+// load hypothesisTrees' member data from file and cut all high-chisq combos
+void compareHypotheses::prepareData() {
+  tree1->fillColumnVecs();
+  tree1->filterHighChiSqEvents();
+  tree2->fillColumnVecs();
+  tree2->filterHighChiSqEvents();
+}
 
 // iterates over tree1's events and checks them against tree2's events.
 // events are logged to log_matches.txt and are stored in the matchedChiSqs map.
@@ -95,24 +117,20 @@ void compareHypotheses::findMatches() {
     std::cerr << "Error: Could not open log file." << std::endl;
     return;
   }
-  std::cout << "Number of unfiltered events in tree1: " << tree1.eventColumnData.size() << " Number of unfiltered events in tree2: " << tree2.eventColumnData.size() << std::endl;
+  std::cout << "Number of unfiltered events in tree1: " << tree1->eventColumnData.size() << " Number of unfiltered events in tree2: " << tree2->eventColumnData.size() << std::endl;
 
   // matchByBestPerBeam true, match by best combo per beam ID (ie. use <unsigned long long, combo> eventBeamAsKey map)
   // TODO: implement a template to allow matching by either map type without this essentially duplicate guard if statement
   if (matchByBestPerBeam) {
-    /* for (const auto& pair : tree1.eventBeamAsKeyMap) {
-      eventAsKeyMap[(pair.first).first] = pair.second;
-    } */
-
-    for (const auto& pair : tree1.eventBeamAsKeyMap) {
-    if (tree2.containsEventIDAndBeam(pair.first)) {
+    for (const auto& pair : tree1->eventBeamAsKeyMap) {
+    if (tree2->containsEventID(pair.first)) {
       // check if run IDs also match
-      if (tree2.eventBeamAsKeyMap[pair.first].getRun() != pair.second.getRun()) { continue; }
+      if (tree2->eventBeamAsKeyMap[pair.first].getRun() != pair.second.getRun()) { continue; }
 
-      matchedChiSqsByBeam[pair.first] = tree2.eventBeamAsKeyMap[pair.first].getChiSq() / tree2.eventBeamAsKeyMap[pair.first].getNDF();
+      matchedChiSqsByBeam[pair.first] = tree2->eventBeamAsKeyMap[pair.first].getChiSq() / tree2->eventBeamAsKeyMap[pair.first].getNDF();
       matches++;
-      os << "Event ID: " << (pair.first).first << " found in both trees. Run IDs: " << pair.second.getRun() << ',' << tree2.eventBeamAsKeyMap[pair.first].getRun() <<
-          " Beam IDs: " << pair.second.getBeamID() << ',' << tree2.eventBeamAsKeyMap[pair.first].getBeamID() << '\n';
+      os << "Event ID: " << (pair.first).first << " found in both trees. Run IDs: " << pair.second.getRun() << ',' << tree2->eventBeamAsKeyMap[pair.first].getRun() <<
+          " Beam IDs: " << pair.second.getBeamID() << ',' << tree2->eventBeamAsKeyMap[pair.first].getBeamID() << '\n';
       // implement verbose mode printing of four-vectors
     }
   }
@@ -121,41 +139,29 @@ void compareHypotheses::findMatches() {
   }
 
   // matchByBestPerBeam false, match by best overall combo (<unsigned long long, combo> eventAsKey map)
-  for (const auto& pair : tree1.eventAsKeyMap) {
-    if (tree2.containsEventID(pair.first)) {
+  for (const auto& pair : tree1->eventAsKeyMap) {
+    auto key_pair = std::make_pair(pair.first, 1851); // use templates instead of placeholder
+    if (tree2->containsEventID(key_pair)) {
       // check if run IDs also match
-      if (tree2.eventAsKeyMap[pair.first].getRun() != pair.second.getRun()) { continue; }
+      if (tree2->eventAsKeyMap[pair.first].getRun() != pair.second.getRun()) { continue; }
 
-      matchedChiSqs[pair.first] = tree2.eventAsKeyMap[pair.first].getChiSq() / tree2.eventAsKeyMap[pair.first].getNDF();
+      matchedChiSqs[pair.first] = tree2->eventAsKeyMap[pair.first].getChiSq() / tree2->eventAsKeyMap[pair.first].getNDF();
       matches++;
-      os << "Event ID: " << pair.first << " found in both trees. Run IDs: " << pair.second.getRun() << ',' << tree2.eventAsKeyMap[pair.first].getRun() <<
-          " Beam IDs: " << pair.second.getBeamID() << ',' << tree2.eventAsKeyMap[pair.first].getBeamID() << '\n';
+      os << "Event ID: " << pair.first << " found in both trees. Run IDs: " << pair.second.getRun() << ',' << tree2->eventAsKeyMap[pair.first].getRun() <<
+          " Beam IDs: " << pair.second.getBeamID() << ',' << tree2->eventAsKeyMap[pair.first].getBeamID() << '\n';
       // implement verbose mode printing of four-vectors
     }
   }
   os.close();  
 }
 
-// load hypothesisTrees' member data from file and cut all high-chisq combos
-void compareHypotheses::prepareData() {
-  if (matchByBestPerBeam) {
-    tree1.fillColumnVecs();
-    tree1.filterHighChiSqEventsByBeam();
-    tree2.fillColumnVecs();
-    tree2.filterHighChiSqEventsByBeam();
-    return;
-  }
-  tree1.fillColumnVecs();
-  tree1.filterHighChiSqEventsByEvent();
-  tree2.fillColumnVecs();
-  tree2.filterHighChiSqEventsByEvent();
-}
+
 
 // writes alternative chisq values into new branch. if no match is found, placeholder chisq is written instead.
 void compareHypotheses::writeToFile(std::string outFile) {
   // replace output filename placeholder (see main.cpp) with tree name from member function
   if (outFile == "placeholder") {
-    outFile = tree2.getTreeName() + "_hypothesesMatched.root";
+    outFile = tree2->getTreeName() + "_hypothesesMatched.root";
   }
 
   
@@ -164,9 +170,9 @@ void compareHypotheses::writeToFile(std::string outFile) {
       // Capture matchedChiSqs by reference
     auto& matchedChiSqsRef = matchedChiSqsByBeam;
     // helper variable for cleaner Define call
-    auto newBranchName = tree2.getTreeName() + "_chisq_ndf";
+    auto newBranchName = tree2->getTreeName() + "_chisq_ndf";
 
-    auto df3 = tree1.df.Define(newBranchName, [&matchedChiSqsRef](unsigned long long event, unsigned beam) {
+    auto df3 = tree1->df.Define(newBranchName, [&matchedChiSqsRef](unsigned long long event, unsigned beam) {
       // check if event is in matchedChiSqs
       if (matchedChiSqsRef.find(std::make_pair(event, beam)) != matchedChiSqsRef.end()) {
         return matchedChiSqsRef[std::make_pair(event, beam)];
@@ -184,9 +190,9 @@ void compareHypotheses::writeToFile(std::string outFile) {
   // Capture matchedChiSqs by reference
   auto& matchedChiSqsRef = matchedChiSqs;
   // helper variable for cleaner Define call
-  auto newBranchName = tree2.getTreeName() + "_chisq_ndf";
+  auto newBranchName = tree2->getTreeName() + "_chisq_ndf";
 
-  auto df3 = tree1.df.Define(newBranchName, [&matchedChiSqsRef](unsigned long long event) {
+  auto df3 = tree1->df.Define(newBranchName, [&matchedChiSqsRef](unsigned long long event) {
     // check if event is in matchedChiSqs
     if (matchedChiSqsRef.find(event) != matchedChiSqsRef.end()) {
       return matchedChiSqsRef[event];
@@ -198,3 +204,4 @@ void compareHypotheses::writeToFile(std::string outFile) {
   // write the newly defined RDataFrame to the file specified by user or the default arg
   df3.Snapshot("hypothesesMatched", outFile);
 }
+
