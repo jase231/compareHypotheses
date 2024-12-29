@@ -59,10 +59,9 @@ make
 ## Output Format
 
 The program generates a ROOT file containing:
-- A copy of the primary tree
+- A copy of the primary tree with unmatched entries removed
 - New branch with matched secondary combos' χ²/NDF values
-- Unmatched combos receive a placeholder value of 1.851e6
-
+  
 ## Matching Criteria
 
 Two matching modes are available:
