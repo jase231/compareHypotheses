@@ -166,33 +166,42 @@ void compareHypotheses::writeToFile(std::string outFile) {
 
   
   // write to file if in match by best per beam mode. to be replaced by generics.
-// write to file if in match by best per beam mode
-if (matchByBestPerBeam) {
-  auto& matchedChiSqsRef = matchedChiSqsByBeam;
+  if (matchByBestPerBeam) {
+      // Capture matchedChiSqs by reference
+    auto& matchedChiSqsRef = matchedChiSqsByBeam;
+    // helper variable for cleaner Define call
+    auto newBranchName = tree2->getTreeName() + "_chisq_ndf";
+
+    auto df3 = tree1->df.Define(newBranchName, [&matchedChiSqsRef](unsigned long long event, unsigned beam) {
+      // check if event is in matchedChiSqs
+      if (matchedChiSqsRef.find(std::make_pair(event, beam)) != matchedChiSqsRef.end()) {
+        return matchedChiSqsRef[std::make_pair(event, beam)];
+      } else {
+        return static_cast<float>(185100000.0);    // using large number to indicate no match
+      }
+    }, {"event", "beam_beamid"});
+
+    // write the newly defined RDataFrame to the file specified by user or the default arg
+    df3.Snapshot("hypothesesMatched", outFile);
+    return;
+  }
+
+  // write to file if in best overall match mode. 
+  // Capture matchedChiSqs by reference
+  auto& matchedChiSqsRef = matchedChiSqs;
+  // helper variable for cleaner Define call
   auto newBranchName = tree2->getTreeName() + "_chisq_ndf";
 
-  auto df3 = tree1->df.Define(newBranchName, [&matchedChiSqsRef](unsigned long long event, unsigned beam) {
-      return matchedChiSqsRef[std::make_pair(event, beam)];
-  }, {"event", "beam_beamid"})
-  .Filter([&matchedChiSqsRef](unsigned long long event, unsigned beam) {
-      return matchedChiSqsRef.find(std::make_pair(event, beam)) != matchedChiSqsRef.end();
-  }, {"event", "beam_beamid"});
+  auto df3 = tree1->df.Define(newBranchName, [&matchedChiSqsRef](unsigned long long event) {
+    // check if event is in matchedChiSqs
+    if (matchedChiSqsRef.find(event) != matchedChiSqsRef.end()) {
+      return matchedChiSqsRef[event];
+    } else {
+      return static_cast<float>(185100000.0);    // using large number to indicate no match
+    }
+  }, {"event"});
 
+  // write the newly defined RDataFrame to the file specified by user or the default arg
   df3.Snapshot("hypothesesMatched", outFile);
-  return;
-}
-
-// write to file if in best overall match mode
-auto& matchedChiSqsRef = matchedChiSqs;
-auto newBranchName = tree2->getTreeName() + "_chisq_ndf";
-
-auto df3 = tree1->df.Define(newBranchName, [&matchedChiSqsRef](unsigned long long event) {
-  return matchedChiSqsRef[event];
-}, {"event"})
-.Filter([&matchedChiSqsRef](unsigned long long event) {
-  return matchedChiSqsRef.find(event) != matchedChiSqsRef.end();
-}, {"event"});
-
-df3.Snapshot("hypothesesMatched", outFile);
 }
 
