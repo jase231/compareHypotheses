@@ -27,6 +27,7 @@ int main(int argc, char* argv[]) {
   int setCounter = 0;
   bool verbose = false;
   bool bestByBeam = false;  // find best overall combo by default
+  bool preserveCombos = false;
 
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "--help") == 0) {
@@ -49,7 +50,9 @@ int main(int argc, char* argv[]) {
       // TODO: check that filename is valid
       outFile = argv[i+1];
     } else if (strcmp(argv[i], "--best-per-beam") == 0 || strcmp(argv[i], "-bb") == 0) {
-        bestByBeam = true;
+      bestByBeam = true;
+    } else if (strcmp(argv[i], "--preserve-combos") == 0 || strcmp(argv[i], "-p") == 0) {
+      preserveCombos = true;
     }
   }
 
@@ -66,7 +69,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Running in best overall combo mode. To run in best combo per beam ID mode, pass the -bb flag.\n";
   }
   std::cout << "Pre-processing data..." << std::endl;
-  compareHypotheses c(file1, tree1, file2, tree2, bestByBeam);
+  compareHypotheses c(file1, tree1, file2, tree2, bestByBeam, preserveCombos);
   c.setVerbose(verbose);
   c.setMatchByBeam(bestByBeam);
   

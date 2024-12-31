@@ -93,8 +93,9 @@ class compareHypotheses {
     hypothesisTreeBase* tree2;
     bool verbose;
     bool matchByBestPerBeam;  // whether matching by best combo per beam is used
+    bool preserveCombos;  // whether to keep combos with high chisq in the output file
   public:
-    compareHypotheses(std::string file1, std::string tree1, std::string file2, std::string tree2, bool matchType);
+    compareHypotheses(std::string file1, std::string tree1, std::string file2, std::string tree2, bool matchType, bool pCombos);
     
     // calls each tree's data preperation functions
     void prepareData();
@@ -104,6 +105,9 @@ class compareHypotheses {
 
     // outputs into a new branch in a clone of the primary RDataFrame
     void writeToFile(std::string outFile);
+
+    // float equality function
+    bool chisqsEqual(const float& a, const float& b);
 
     // counter for number of matches
     uint matches;
