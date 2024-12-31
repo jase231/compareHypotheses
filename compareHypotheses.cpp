@@ -181,6 +181,7 @@ void compareHypotheses::writeToFile(std::string outFile) {
     auto& tree1eventMap = tree1->eventBeamAsKeyMap;
     
     auto df3 = tree1->df
+      // create new branch for the matched chisq values, fill it with the matched chisq values or placeholder if no match is found
       .Define(NEW_BRANCH_NAME, [&matchedChiSqsRef, NO_MATCH_INDICATOR](unsigned long long event, unsigned beam) {
         if (matchedChiSqsRef.find(std::make_pair(event, beam)) != matchedChiSqsRef.end()) {
           return matchedChiSqsRef[std::make_pair(event, beam)];
@@ -188,6 +189,7 @@ void compareHypotheses::writeToFile(std::string outFile) {
           return NO_MATCH_INDICATOR;    // using large number to indicate no match
         }
       }, {"event", "beam_beamid"})
+      // preserve only the lowest chisq combo per event ID & beam ID if preserveCombos is false
       .Filter([&matchedChiSqsRef, &tree1eventMap, this](unsigned long long event, unsigned beam, float kin_chisq) {
         return chisqsEqual(kin_chisq, tree1eventMap[std::make_pair(event, beam)].getChiSq()) || preserveCombos;
       }, {"event", "beam_beamid", "kin_chisq"});
@@ -201,14 +203,15 @@ void compareHypotheses::writeToFile(std::string outFile) {
   auto& tree1eventMap = tree1->eventAsKeyMap;
 
   auto df3 = tree1->df
+    // create new branch for the matched chisq values, fill it with the matched chisq values or placeholder if no match is found
     .Define(NEW_BRANCH_NAME, [&matchedChiSqsRef, NO_MATCH_INDICATOR](unsigned long long event) {
-      // check if event is in matchedChiSqs
       if (matchedChiSqsRef.find(event) != matchedChiSqsRef.end()) {
         return matchedChiSqsRef[event];
       } else {
         return NO_MATCH_INDICATOR;    // using large number to indicate no match
       }
     }, {"event"})
+    // preserve only the lowest chisq combo per event ID if preserveCombos is false
     .Filter([&matchedChiSqsRef, &tree1eventMap, this](unsigned long long event, float kin_chisq) {
       return chisqsEqual(kin_chisq, tree1eventMap[event].getChiSq()) || preserveCombos;
   }, {"event", "kin_chisq"});
