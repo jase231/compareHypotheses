@@ -6,6 +6,7 @@ The GlueX experiment features nearly full angular coverage and can detect both n
 
 - Compare chi-squared values between two different reconstruction hypotheses
 - Support for both best overall combo and best-per-beam-ID matching modes
+- Support for two output modes; one conserving disk-space and one preserving all primary tree events
 - Output includes matched events with corresponding chi-square values
 - Built on ROOT's RDataFrame for efficient data processing
 
@@ -15,6 +16,7 @@ The GlueX experiment features nearly full angular coverage and can detect both n
 - C++ compiler (tested on GCC 4.8.5)
 - Input files must contain a flat ROOT tree with the following required branches:
   - Event ID
+  - Run Number
   - Beam ID
   - ChiSq
   - NDF (Number of Degrees of Freedom)
@@ -49,6 +51,7 @@ make
 
 - `--outfile`: Custom output filename (default: `<tree2>_hypothesesMatched.root`)
 - `--best-per-beam` / `-bb`: Match by best combo per beam ID (default: match by best overall combo)
+- `--preserve-combos` / `-p`: Preserve all primary tree entries, rather than the default behavior of removing non-unique combos by χ²
 
 ### Example
 
@@ -58,9 +61,9 @@ make
 
 ## Output Format
 
-The program generates a ROOT file containing:
-- A copy of the primary tree with unmatched entries removed
-- New branch with matched secondary combos' χ²/NDF values
+By default, the program generates a ROOT file containing:
+- A copy of the primary tree with improbable, non-unique combos removed (see the preserve output mode above if non-unique combos need to be preserved)
+- New branch with matched secondary combos' χ²/NDF values (the branch is named in the format: [secondary_tree_name]_chisq_ndf)
   
 ## Matching Criteria
 
@@ -69,14 +72,14 @@ Two matching modes are available:
 2. Best Per Beam ID: Selects the combo with lowest χ² for each unique event+beam ID pair; to be used alongside accidental subtraction
 
 ## Performance
+
 The performance of the tool is limited by the ROOT library's I/O efficiency. In a test run comparing two trees with around 300,000 events each, the matching process takes 2 seconds for best overall mode and 3 seconds for best per beam matching mode. Writing the output to file using the ROOT library takes 30 seconds.
 
 ## Future Development
 
 - [X] Benchmarking support
-- [ ] Implementation of MC generated beam energy data support
-- [ ] Output option for matched-only combos
-- [ ] Generic implementation of matching logic
+- [X] Output only unique combos
+- [X] Rewrite implementation of matching logic
 - [ ] Enhanced edge case handling for multiple equivalent matches
 
 ## Authors
