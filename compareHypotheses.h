@@ -37,22 +37,23 @@ struct combo {
     unsigned kin_ndf;
 };
 
-class hypothesisTree {
+class hypothesisTreeBase {
   public:
-    hypothesisTree(std::string fileName, std::string treeName, bool matchType);
-
+    hypothesisTreeBase(std::string fileName, std::string treeName, bool matchType);
+    virtual ~hypothesisTreeBase() = default;
     // data preperation functions
-    void updateComboData(size_t index);
-    void filterHighChiSqEventsByBeam();
-    void filterHighChiSqEventsByEvent();
+    virtual void updateComboData(size_t index) = 0;
+    virtual void filterHighChiSqEvents() = 0;
+    
+    bool containsEventID(std::pair<unsigned long long, unsigned>) const;
     void fillColumnVecs();
-
-    // check whether matching criteria is already mapped in their respective combo maps
-    bool containsEventID(unsigned long long) const;
-    bool containsEventIDAndBeam(std::pair<unsigned long long, unsigned>) const;
-
     // helper for getting tree name
     std::string getTreeName() const { return treeName; }
+
+    // combo maps
+    std::map<std::pair<unsigned long long, unsigned>, combo> eventBeamAsKeyMap;
+    std::map<unsigned long long, combo> eventAsKeyMap;
+    
     
     // RDataFrame
     ROOT::RDataFrame df;
@@ -63,25 +64,38 @@ class hypothesisTree {
     std::vector<unsigned int> beamColumnData;
     std::vector<float> chiSqColumnData;
     std::vector<unsigned> ndfColumnData;
-
-    // combo maps
-    std::map<std::pair<unsigned long long, unsigned>, combo> eventBeamAsKeyMap;
-    std::map<unsigned long long, combo> eventAsKeyMap;
     
-
   private:
     std::string treeName;
     bool matchByBestPerBeam;  // whether matching by best combo per beam is used
 };
 
+class hypothesisTreeBestCombo : public hypothesisTreeBase {
+  public:
+    hypothesisTreeBestCombo(std::string fileName, std::string treeName, bool matchType) : hypothesisTreeBase(fileName, treeName, matchType) {}
+
+    void updateComboData(size_t index) override;
+    void filterHighChiSqEvents() override; 
+};
+
+class hypothesisTreeBestPerBeam : public hypothesisTreeBase {
+  public:
+    hypothesisTreeBestPerBeam(std::string fileName, std::string treeName, bool matchType) : hypothesisTreeBase(fileName, treeName, matchType) {}
+
+    void updateComboData(size_t index) override;
+    void filterHighChiSqEvents() override;
+};
+
+
 class compareHypotheses {
   private:
-    hypothesisTree tree1;
-    hypothesisTree tree2;
+    hypothesisTreeBase* tree1;
+    hypothesisTreeBase* tree2;
     bool verbose;
     bool matchByBestPerBeam;  // whether matching by best combo per beam is used
+    bool preserveCombos;  // whether to keep combos with high chisq in the output file
   public:
-    compareHypotheses(std::string file1, std::string tree1, std::string file2, std::string tree2, bool matchType);
+    compareHypotheses(std::string file1, std::string tree1, std::string file2, std::string tree2, bool matchType, bool pCombos);
     
     // calls each tree's data preperation functions
     void prepareData();
@@ -91,6 +105,9 @@ class compareHypotheses {
 
     // outputs into a new branch in a clone of the primary RDataFrame
     void writeToFile(std::string outFile);
+
+    // float equality function
+    bool chisqsEqual(const float& a, const float& b);
 
     // counter for number of matches
     uint matches;
@@ -103,4 +120,5 @@ class compareHypotheses {
     bool isVerbose() const { return verbose; }
     void setVerbose(bool v) { verbose = v; }
     void setMatchByBeam(bool b) { matchByBestPerBeam = b; }
+    ~compareHypotheses() { delete tree1; delete tree2;}
 };
