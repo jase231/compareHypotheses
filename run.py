@@ -40,9 +40,9 @@ OUTPUT_DIR = "/some/directory/hypotheses/output"
 
 # command templates
 # {} are placeholders for the file path and run number. if the order of the placeholders changes, the order of the arguments in the format functions must change accordingly
-COMMAND_TEMPLATE_HYP1 = "./compareHypotheses -f1 {} -t1 {} -f2 {}/../{}/tree_{}_flat_{}.root -t2 {} -bb --outfile {}/intermediate1_{}.root"
-COMMAND_TEMPLATE_HYP2 = "./compareHypotheses -f1 {}/intermediate1_{}.root -t1 hypothesesMatched -f2 {}/../{}/tree_{}_flat_{}.root -t2 {} -bb --outfile {}/intermediate2_{}.root"
-COMMAND_TEMPLATE_HYP3 = "./compareHypotheses -f1 {}/intermediate2_{}.root -t1 hypothesesMatched -f2 {}/../{}/tree_{}_flat_{}.root -t2 {} -bb --outfile {}/final_output{}.root"
+COMMAND_TEMPLATE_HYP1 = "./compareHypotheses -f1 {} -t1 {} -f2 {}/../{}/tree_{}_flat_{}.root -t2 {} -b --outfile {}/intermediate1_{}.root"
+COMMAND_TEMPLATE_HYP2 = "./compareHypotheses -f1 {}/intermediate1_{}.root -t1 hypothesesMatched -f2 {}/../{}/tree_{}_flat_{}.root -t2 {} -b --outfile {}/intermediate2_{}.root"
+COMMAND_TEMPLATE_HYP3 = "./compareHypotheses -f1 {}/intermediate2_{}.root -t1 hypothesesMatched -f2 {}/../{}/tree_{}_flat_{}.root -t2 {} -b --outfile {}/final_output{}.root"
 COMMAND_TEMPLATE_CLEANUP = "rm {}/intermediate1_{}.root {}/intermediate2_{}.root"
 ############################################################################################################
 
