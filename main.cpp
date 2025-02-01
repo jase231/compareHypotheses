@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
     } else if (strcmp(argv[i], "--outfile") == 0 || strcmp(argv[i], "-o") == 0) {
       // TODO: check that filename is valid
       outFile = argv[i+1];
-    } else if (strcmp(argv[i], "--best-per-beam") == 0 || strcmp(argv[i], "-bb") == 0) {
+    } else if (strcmp(argv[i], "--best-per-beam") == 0 || strcmp(argv[i], "-b") == 0) {
       bestByBeam = true;
     } else if (strcmp(argv[i], "--preserve-combos") == 0 || strcmp(argv[i], "-p") == 0) {
       preserveCombos = true;

@@ -50,7 +50,7 @@ make
 ### Optional Flags
 
 - `--outfile`: Custom output filename (default: `<tree2>_hypothesesMatched.root`)
-- `--best-per-beam` / `-bb`: Match by best combo per beam ID (default: match by best overall combo)
+- `--best-per-beam` / `-b`: Match by best combo per beam ID (default: match by best overall combo)
 - `--preserve-combos` / `-p`: Preserve all primary tree entries, rather than the default behavior of removing non-unique combos by χ²
 
 ### Example
