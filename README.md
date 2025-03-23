@@ -33,31 +33,23 @@ make
 
 ## Usage
 
-### Basic Command Structure
+### Pass the configuration file as the only argument
 
 ```bash
-./compareHypotheses [flags]
+./compareHypotheses config.ini
 ```
 
 
-### Required Flags
+### Configuration file (see the example config.ini for structure and syntax)
 
-- `--file1` / `-f1`: Primary .root file path
-- `--file2` / `-f2`: Secondary .root file path
-- `--tree1` / `-t1`: Name of the primary tree in file1
-- `--tree2` / `-t2`: Name of the secondary tree in file2
+- `file`: The path of each tree's .root file
+- `tree`: Name of each tree
 
 ### Optional Flags
 
-- `--outfile`: Custom output filename (default: `<tree2>_hypothesesMatched.root`)
-- `--best-per-beam` / `-b`: Match by best combo per beam ID (default: match by best overall combo)
-- `--preserve-combos` / `-p`: Preserve all primary tree entries, rather than the default behavior of removing non-unique combos by χ²
-
-### Example
-
-```bash
-./compareHypotheses --file1 data1.root --file2 data2.root --tree1 pi0pippieta --tree2 pi0pippim --outfile results.root
-```
+- `outfile`: Custom output filename (default: `<tree2>_hypothesesMatched.root`)
+- `best_per_beam`: Match by best combo per beam ID (default: match by best overall combo)
+- `preserve_combos`: Preserve all primary tree entries, rather than the default behavior of removing non-unique combos by χ²
 
 ## Output Format
 
@@ -80,6 +72,7 @@ The performance of the tool is limited by the ROOT library's I/O efficiency. In 
 - [X] Benchmarking support
 - [X] Output only unique combos
 - [X] Rewrite implementation of matching logic
+- [X] Use configuration file instead of CLI flags 
 
 ## Authors
 
