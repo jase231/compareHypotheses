@@ -72,7 +72,8 @@ The performance of the tool is limited by the ROOT library's I/O efficiency. In 
 - [X] Benchmarking support
 - [X] Output only unique combos
 - [X] Rewrite implementation of matching logic
-- [X] Use configuration file instead of CLI flags 
+- [X] Use configuration file instead of CLI flags
+- [ ] Make the logging of matching info optional
 
 ## Authors
 
