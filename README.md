@@ -36,7 +36,7 @@ make
 ### Pass the configuration file as the only argument
 
 ```bash
-./compareHypotheses config.ini
+./compare_hypotheses config.ini
 ```
 
 
