@@ -49,6 +49,9 @@ class hypothesis_tree_base {
     bool is_matching_by_beam() const { return match_by_best_per_beam; }
     void set_match_by_beam(bool m) { match_by_best_per_beam = m; }
     
+    bool is_logging() const { return logging; }
+    void set_logging(bool l) { logging = l; }
+
     bool contains_event_id(std::pair<unsigned long long, unsigned>) const;
     void fill_column_vecs();
     std::string get_tree_name() const { return tree_name; }
@@ -70,6 +73,7 @@ class hypothesis_tree_base {
   private:
     std::string tree_name;
     bool match_by_best_per_beam;  // whether matching by best combo per beam is used
+    bool logging;                 
 };
 
 class hypothesis_tree_best_combo : public hypothesis_tree_base {
@@ -118,7 +122,11 @@ class compare_hypotheses {
 
     // helpers and member data setters
     bool is_logging() const { return logging; }
-    void set_logging(bool l) { logging = l; }
+    void set_logging(bool l) { 
+      logging = l;
+      tree1->set_logging(l);
+      tree2->set_logging(l);
+    }
 
     bool is_preserving() const { return preserve_combos; }
     void set_preserving(bool p) { preserve_combos = p; }

@@ -123,15 +123,15 @@ bool compare_hypotheses::chi_sqs_equal(const float& a, const float& b) {
 // iterates over tree1's events and checks them against tree2's events.
 // events are logged to log_matches.txt and are stored in the matched_chi_sqs map.
 void compare_hypotheses::find_matches() {
-  std::ofstream os("log_matches.txt");
+  std::ofstream os;
+  if (logging) { os.open("log_matches.txt"); }
 
-  if (!os.good()) {
+  if (!os.good() && logging) {
     std::cerr << "Error: Could not open log file." << std::endl;
     return;
   }
   std::cout << "Number of unfiltered events in tree1: " << tree1->event_column_data.size() 
             << " Number of unfiltered events in tree2: " << tree2->event_column_data.size() << std::endl;
-
   // match_by_best_per_beam true, match by best combo per beam ID
   if (match_by_best_per_beam) {
     for (const auto& pair : tree1->event_beam_as_key_map) {
@@ -148,13 +148,14 @@ void compare_hypotheses::find_matches() {
         // store the match
         matched_chi_sqs_by_beam[pair.first] = tree2_combo.get_chi_sq() / tree2_combo.get_ndf();
         matches++;
-        
-        os << "Event ID: " << (pair.first).first 
-           << " found in both trees. Run IDs: " << pair.second.get_run() << ',' << tree2_combo.get_run()
-           << " Beam IDs: " << pair.second.get_beam_id() << ',' << tree2_combo.get_beam_id() << '\n';
+        if (logging) {
+          os << "Event ID: " << (pair.first).first 
+            << " found in both trees. Run IDs: " << pair.second.get_run() << ',' << tree2_combo.get_run()
+            << " Beam IDs: " << pair.second.get_beam_id() << ',' << tree2_combo.get_beam_id() << '\n';
+        }
       }
     }
-    os.close();
+    if (logging) { os.close(); }
     return;
   }
 
@@ -173,12 +174,14 @@ void compare_hypotheses::find_matches() {
       matched_chi_sqs[pair.first] = tree2_combo.get_chi_sq() / tree2_combo.get_ndf();
       matches++;
       
-      os << "Event ID: " << pair.first 
-         << " found in both trees. Run IDs: " << pair.second.get_run() << ',' << tree2_combo.get_run()
-         << " Beam IDs: " << pair.second.get_beam_id() << ',' << tree2_combo.get_beam_id() << '\n';
+      if (logging) {
+        os << "Event ID: " << pair.first 
+          << " found in both trees. Run IDs: " << pair.second.get_run() << ',' << tree2_combo.get_run()
+          << " Beam IDs: " << pair.second.get_beam_id() << ',' << tree2_combo.get_beam_id() << '\n';
+      }
     }
   }
-  os.close();  
+  if (logging) { os.close(); }  
 }
 
 // writes alternative chisq values into new branch. if no match is found, placeholder chisq is written instead.
