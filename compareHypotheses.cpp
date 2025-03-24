@@ -128,39 +128,53 @@ void compareHypotheses::findMatches() {
     std::cerr << "Error: Could not open log file." << std::endl;
     return;
   }
-  std::cout << "Number of unfiltered events in tree1: " << tree1->eventColumnData.size() << " Number of unfiltered events in tree2: " << tree2->eventColumnData.size() << std::endl;
+  std::cout << "Number of unfiltered events in tree1: " << tree1->eventColumnData.size() 
+            << " Number of unfiltered events in tree2: " << tree2->eventColumnData.size() << std::endl;
 
-  // matchByBestPerBeam true, match by best combo per beam ID (ie. use <unsigned long long, combo> eventBeamAsKey map)
-  // TODO: implement a template to allow matching by either map type without this essentially duplicate guard if statement
+  // matchByBestPerBeam true, match by best combo per beam ID
   if (matchByBestPerBeam) {
     for (const auto& pair : tree1->eventBeamAsKeyMap) {
-    if (tree2->containsEventID(pair.first)) {
-      // check if run IDs also match
-      if (tree2->eventBeamAsKeyMap[pair.first].getRun() != pair.second.getRun()) { continue; }
+      // get iterator
+      auto tree2_it = tree2->eventBeamAsKeyMap.find(pair.first);
+      
+      // check if key exists
+      if (tree2_it != tree2->eventBeamAsKeyMap.end()) {
+        const combo& tree2_combo = tree2_it->second;
+        
+        // run ID match check
+        if (tree2_combo.getRun() != pair.second.getRun()) { continue; }
 
-      matchedChiSqsByBeam[pair.first] = tree2->eventBeamAsKeyMap[pair.first].getChiSq() / tree2->eventBeamAsKeyMap[pair.first].getNDF();
-      matches++;
-      os << "Event ID: " << (pair.first).first << " found in both trees. Run IDs: " << pair.second.getRun() << ',' << tree2->eventBeamAsKeyMap[pair.first].getRun() <<
-          " Beam IDs: " << pair.second.getBeamID() << ',' << tree2->eventBeamAsKeyMap[pair.first].getBeamID() << '\n';
-      // implement verbose mode printing of four-vectors
+        // store the match
+        matchedChiSqsByBeam[pair.first] = tree2_combo.getChiSq() / tree2_combo.getNDF();
+        matches++;
+        
+        os << "Event ID: " << (pair.first).first 
+           << " found in both trees. Run IDs: " << pair.second.getRun() << ',' << tree2_combo.getRun()
+           << " Beam IDs: " << pair.second.getBeamID() << ',' << tree2_combo.getBeamID() << '\n';
+      }
     }
-  }
-  os.close();
-  return;
+    os.close();
+    return;
   }
 
-  // matchByBestPerBeam false, match by best overall combo (<unsigned long long, combo> eventAsKey map)
+  // matchByBestPerBeam false, match by best overall combo
   for (const auto& pair : tree1->eventAsKeyMap) {
-    auto key_pair = std::make_pair(pair.first, 1851); // use templates instead of placeholder
-    if (tree2->containsEventID(key_pair)) {
-      // check if run IDs also match
-      if (tree2->eventAsKeyMap[pair.first].getRun() != pair.second.getRun()) { continue; }
+    // get iterator
+    auto tree2_it = tree2->eventAsKeyMap.find(pair.first);
+    
+    if (tree2_it != tree2->eventAsKeyMap.end()) {
+      const combo& tree2_combo = tree2_it->second;
+      
+      // run ID match check
+      if (tree2_combo.getRun() != pair.second.getRun()) { continue; }
 
-      matchedChiSqs[pair.first] = tree2->eventAsKeyMap[pair.first].getChiSq() / tree2->eventAsKeyMap[pair.first].getNDF();
+      // store the match
+      matchedChiSqs[pair.first] = tree2_combo.getChiSq() / tree2_combo.getNDF();
       matches++;
-      os << "Event ID: " << pair.first << " found in both trees. Run IDs: " << pair.second.getRun() << ',' << tree2->eventAsKeyMap[pair.first].getRun() <<
-          " Beam IDs: " << pair.second.getBeamID() << ',' << tree2->eventAsKeyMap[pair.first].getBeamID() << '\n';
-      // implement verbose mode printing of four-vectors
+      
+      os << "Event ID: " << pair.first 
+         << " found in both trees. Run IDs: " << pair.second.getRun() << ',' << tree2_combo.getRun()
+         << " Beam IDs: " << pair.second.getBeamID() << ',' << tree2_combo.getBeamID() << '\n';
     }
   }
   os.close();  
