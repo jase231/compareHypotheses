@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
   std::string out_file = reader.Get("Misc", "outfile", "placeholder");
   bool best_by_beam = reader.GetBoolean("Misc", "best_per_beam", false);
   bool preserve_combos = reader.GetBoolean("Misc", "preserve_combos", false);
-  bool verbose = reader.GetBoolean("Misc", "verbose", false);
+  bool logging = reader.GetBoolean("Misc", "logging", false);
 
   // validate config
   if (file1.empty() || file2.empty() || tree1.empty() || tree2.empty()) {
@@ -57,11 +57,13 @@ int main(int argc, char* argv[]) {
   if (best_by_beam) {
     std::cout << "Running in best combo per beam ID mode.\n";
   } else {
-    std::cout << "Running in best overall combo mode. To run in best combo per beam ID mode, pass the -bb flag.\n";
+    std::cout << "Running in best overall combo mode.\n";
   }
   std::cout << "Pre-processing data..." << std::endl;
-  compare_hypotheses c(file1, tree1, file2, tree2, best_by_beam, preserve_combos);
-  c.set_verbose(verbose);
+  compare_hypotheses c(file1, tree1, file2, tree2);
+  c.set_match_by_beam(best_by_beam);
+  c.set_preserving(preserve_combos);
+  c.set_logging(logging);
   c.set_match_by_beam(best_by_beam);
   
   c.prepare_data();

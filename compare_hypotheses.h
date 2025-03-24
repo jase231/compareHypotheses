@@ -44,6 +44,10 @@ class hypothesis_tree_base {
     // data preperation functions
     virtual void update_combo_data(size_t index) = 0;
     virtual void filter_high_chi_sq_events() = 0;
+
+    
+    bool is_matching_by_beam() const { return match_by_best_per_beam; }
+    void set_match_by_beam(bool m) { match_by_best_per_beam = m; }
     
     bool contains_event_id(std::pair<unsigned long long, unsigned>) const;
     void fill_column_vecs();
@@ -87,11 +91,11 @@ class compare_hypotheses {
   private:
     hypothesis_tree_base* tree1;
     hypothesis_tree_base* tree2;
-    bool verbose;
-    bool match_by_best_per_beam;  // whether matching by best combo per beam is used
-    bool preserve_combos;  // whether to keep combos with high chisq in the output file
+    bool logging = false;                 // whether logs of matches are written to file
+    bool match_by_best_per_beam = false;  // whether matching by best combo per beam is used
+    bool preserve_combos = false;         // whether to keep combos with high chisq in the output file
   public:
-    compare_hypotheses(std::string file1, std::string tree1, std::string file2, std::string tree2, bool match_type, bool p_combos);
+    compare_hypotheses(std::string file1, std::string tree1, std::string file2, std::string tree2);
     
     // calls each tree's data preperation functions
     void prepare_data();
@@ -113,8 +117,18 @@ class compare_hypotheses {
     std::map<unsigned long long, float> matched_chi_sqs;
 
     // helpers and member data setters
-    bool is_verbose() const { return verbose; }
-    void set_verbose(bool v) { verbose = v; }
-    void set_match_by_beam(bool b) { match_by_best_per_beam = b; }
+    bool is_logging() const { return logging; }
+    void set_logging(bool l) { logging = l; }
+
+    bool is_preserving() const { return preserve_combos; }
+    void set_preserving(bool p) { preserve_combos = p; }
+
+    bool is_matching_by_beam() const { return match_by_best_per_beam; }
+    void set_match_by_beam(bool m) { 
+      match_by_best_per_beam = m;
+      tree1->set_match_by_beam(m);
+      tree2->set_match_by_beam(m);
+    }
+
     ~compare_hypotheses() { delete tree1; delete tree2; }
 };

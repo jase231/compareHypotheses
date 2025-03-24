@@ -90,14 +90,14 @@ void hypothesis_tree_best_per_beam::filter_high_chi_sq_events() {
 }
 
 // constructor for compare_hypotheses manager class. initializes two hypothesisTrees and the match counter.
-compare_hypotheses::compare_hypotheses(std::string file_1, std::string tree_1, std::string file_2, std::string tree_2, bool match_type, bool p_combos) 
-    : matches(0), match_by_best_per_beam(match_type), preserve_combos(p_combos) {
+compare_hypotheses::compare_hypotheses(std::string file_1, std::string tree_1, std::string file_2, std::string tree_2) 
+    : matches(0) {
   if (match_by_best_per_beam) {
-    tree1 = new hypothesis_tree_best_per_beam(file_1, tree_1, match_type);
-    tree2 = new hypothesis_tree_best_per_beam(file_2, tree_2, match_type);
+    tree1 = new hypothesis_tree_best_per_beam(file_1, tree_1, match_by_best_per_beam);
+    tree2 = new hypothesis_tree_best_per_beam(file_2, tree_2, match_by_best_per_beam);
   } else {
-    tree1 = new hypothesis_tree_best_combo(file_1, tree_1, match_type);
-    tree2 = new hypothesis_tree_best_combo(file_2, tree_2, match_type);
+    tree1 = new hypothesis_tree_best_combo(file_1, tree_1, match_by_best_per_beam);
+    tree2 = new hypothesis_tree_best_combo(file_2, tree_2, match_by_best_per_beam);
   }
 }
 
