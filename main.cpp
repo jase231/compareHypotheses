@@ -60,8 +60,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Running in best overall combo mode.\n";
   }
   std::cout << "Pre-processing data..." << std::endl;
-  compare_hypotheses c(file1, tree1, file2, tree2);
-  c.set_match_by_beam(best_by_beam);
+  compare_hypotheses c(file1, tree1, file2, tree2, best_by_beam);
   c.set_preserving(preserve_combos);
   c.set_logging(logging);
   c.set_match_by_beam(best_by_beam);

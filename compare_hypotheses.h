@@ -96,10 +96,10 @@ class compare_hypotheses {
     hypothesis_tree_base* tree1;
     hypothesis_tree_base* tree2;
     bool logging = false;                 // whether logs of matches are written to file
-    bool match_by_best_per_beam = false;  // whether matching by best combo per beam is used
+    bool match_by_best_per_beam;  // whether matching by best combo per beam is used
     bool preserve_combos = false;         // whether to keep combos with high chisq in the output file
   public:
-    compare_hypotheses(std::string file1, std::string tree1, std::string file2, std::string tree2);
+    compare_hypotheses(std::string file1, std::string tree1, std::string file2, std::string tree2, bool match_type);
     
     // calls each tree's data preperation functions
     void prepare_data();
