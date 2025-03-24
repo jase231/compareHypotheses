@@ -5,13 +5,13 @@ ROOTCFLAGS := $(shell root-config --cflags)
 ROOTLIBS := $(shell root-config --libs)
 
 # Source files
-SRCS = compareHypotheses.cpp main.cpp
+SRCS = compare_hypotheses.cpp main.cpp
 
 # Object files
 OBJS = $(SRCS:.cpp=.o)
 
 # Executable name
-EXEC = compareHypotheses
+EXEC = compare_hypotheses
 
 # Default rule to build the executable
 all: $(EXEC)
