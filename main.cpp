@@ -32,13 +32,6 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   
-  // read primary and secondary configs
-  std::string file1 = reader.Get("Primary", "file", "");
-  std::string file2 = reader.Get("Secondary", "file", "");
-
-  std::string tree1 = reader.Get("Primary", "tree", "");
-  std::string tree2 = reader.Get("Secondary", "tree", "");
-
   // optional configs
   std::string out_file = reader.Get("Misc", "outfile", "placeholder");
   bool best_by_beam = reader.GetBoolean("Misc", "best_per_beam", false);
@@ -52,7 +45,27 @@ int main(int argc, char* argv[]) {
     std::cerr << "[Primary]\nfile = ...\ntree = ...\n\n";
     std::cerr << "[Secondary]\nfile = ...\ntree = ...\n";
     return 1;
-}
+  }
+
+  std::string tree1 = reader.Get("1", "tree", "");
+  std::string file1 = reader.Get("1", "file", "");
+  Tree_config primary = {tree1, file1};
+
+  // get number of alternative hypotheses
+  int num_alt_hypos = reader.GetInteger("1", "num_alt_hypos", "1");
+  std::vector<Tree_config> alt_hypo_configs(num_alt_hypos);
+  for (int i = 2; i < num_alt_hypos; i++) {
+    std::string num_as_string = std::to_string(i);
+    std::string file = reader.Get(num_as_string, "file", "");
+    std::string tree = reader.Get(num_as_string, "tree", "");
+
+    alt_hypo_configs.push_back({file, tree});  
+  }
+
+  alt_hpop
+
+
+
 
   if (best_by_beam) {
     std::cout << "Running in best combo per beam ID mode.\n";
