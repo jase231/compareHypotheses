@@ -74,7 +74,9 @@ The performance of the tool is limited by the ROOT library's I/O efficiency. In 
 - [X] Rewrite implementation of matching logic
 - [X] Use configuration file instead of CLI flags
 - [X] Make the logging of matching info optional
-
+- [ ] Support simultaneous comparison of 3+ hypotheses
+- [ ] Remove unnecessary passing of bools to tree constructors
+      
 ## Authors
 
 Jake Serwe - Florida State University
