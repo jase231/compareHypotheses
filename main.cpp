@@ -38,34 +38,32 @@ int main(int argc, char* argv[]) {
   bool preserve_combos = reader.GetBoolean("Misc", "preserve_combos", false);
   bool logging = reader.GetBoolean("Misc", "logging", false);
 
-  // validate config
-  if (file1.empty() || file2.empty() || tree1.empty() || tree2.empty()) {
-    std::cerr << "Missing required parameters in config file.\n";
-    std::cerr << "Required sections/keys:\n";
-    std::cerr << "[Primary]\nfile = ...\ntree = ...\n\n";
-    std::cerr << "[Secondary]\nfile = ...\ntree = ...\n";
-    return 1;
-  }
+
 
   std::string tree1 = reader.Get("1", "tree", "");
   std::string file1 = reader.Get("1", "file", "");
+  if (file1.empty() || tree1.empty()) {
+    std::cerr << "Primary hypothesis parameters missing. Please enter the primary hypotheses' filename and treename in the config.\n";
+    return 1;
+  }
   Tree_config primary = {tree1, file1};
 
   // get number of alternative hypotheses
-  int num_alt_hypos = reader.GetInteger("1", "num_alt_hypos", "1");
-  std::vector<Tree_config> alt_hypo_configs(num_alt_hypos);
-  for (int i = 2; i < num_alt_hypos; i++) {
-    std::string num_as_string = std::to_string(i);
+  int num_alt_hypos = reader.GetInteger("1", "num_alt_hypos", 1);
+  std::vector<Tree_config> alt_hypo_configs;
+  alt_hypo_configs.reserve(num_alt_hypos);
+  for (int i = 0; i < num_alt_hypos; i++) {
+    std::string num_as_string = std::to_string(i+2);
     std::string file = reader.Get(num_as_string, "file", "");
     std::string tree = reader.Get(num_as_string, "tree", "");
 
-    alt_hypo_configs.push_back({file, tree});  
+    if (file.empty() || tree.empty()) {
+      std::cerr << "At least one alternative hypothesis parameter is missing. Please ensure you entered filenames and treenames for the number of hypotheses you indicated in the config.\n";
+      return 1;
+    }
+
+    alt_hypo_configs.push_back({file, tree});
   }
-
-  alt_hpop
-
-
-
 
   if (best_by_beam) {
     std::cout << "Running in best combo per beam ID mode.\n";
@@ -73,7 +71,8 @@ int main(int argc, char* argv[]) {
     std::cout << "Running in best overall combo mode.\n";
   }
   std::cout << "Pre-processing data..." << std::endl;
-  compare_hypotheses c(file1, tree1, file2, tree2, best_by_beam);
+  
+  compare_hypotheses c(file1, tree1, alt_hypo_configs, best_by_beam);
   c.set_preserving(preserve_combos);
   c.set_logging(logging);
   c.set_match_by_beam(best_by_beam);

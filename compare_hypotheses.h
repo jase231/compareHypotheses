@@ -14,10 +14,10 @@
 #include <cstddef>
 #include <chrono>
 
-struct {
+struct Tree_config {
   std::string filename;
   std::string treename;
-} Tree_config;
+};
 
 struct combo {
   public:
@@ -120,17 +120,22 @@ class compare_hypotheses {
 
     // counter for number of matches
     uint matches;
+    uint num_hypos;
 
     // maps for storing chisq of matched combos from secondary tree
-    std::map<std::pair<unsigned long long, unsigned>, float> matched_chi_sqs_by_beam;
-    std::map<unsigned long long, float> matched_chi_sqs;
+    //std::map<std::pair<unsigned long long, unsigned>, float> matched_chi_sqs_by_beam;
+    //std::map<unsigned long long, float> matched_chi_sqs;
+
+    //vectors for storing all hypotheses' matches
+    std::vector<std::map<std::pair<unsigned long long, unsigned>, float>> matched_chi_sqs_by_beam;
+    std::vector<std::map<unsigned long long, float>> matched_chi_sqs;
 
     // helpers and member data setters
     bool is_logging() const { return logging; }
     void set_logging(bool l) { 
       logging = l;
       tree1->set_logging(l);
-      tree2->set_logging(l);
+      for (hypothesis_tree_base* tree : alt_hypos) { tree->set_logging(l); }
     }
 
     bool is_preserving() const { return preserve_combos; }
@@ -140,7 +145,7 @@ class compare_hypotheses {
     void set_match_by_beam(bool m) { 
       match_by_best_per_beam = m;
       tree1->set_match_by_beam(m);
-      tree2->set_match_by_beam(m);
+      for (hypothesis_tree_base* tree : alt_hypos) { tree->set_match_by_beam(m); }
     }
 
     ~compare_hypotheses() { delete tree1; for(hypothesis_tree_base* tree : alt_hypos) { delete tree; } }
