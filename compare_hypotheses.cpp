@@ -207,7 +207,7 @@ void compare_hypotheses::find_matches() {
 // writes alternative chisq values into new branch. if no match is found, placeholder chisq is written instead.
 // if preserve_combos is false (which is the default), only the most probable combos from the primary tree and their matches are written.
 void compare_hypotheses::write_to_file(std::string out_file) {
-  if (out_file == "placeholder") {
+  if (out_file == "placeholder" || out_file == "") {
     out_file = std::to_string(num_hypos) + "_hypothesesMatched.root";
   }
 
