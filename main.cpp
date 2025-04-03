@@ -70,8 +70,13 @@ int main(int argc, char* argv[]) {
   } else {
     std::cout << "Running in best overall combo mode.\n";
   }
-  std::cout << "Pre-processing data..." << std::endl;
   
+  std::cout << "Comparing:\n";
+  for (Tree_config tree : alt_hypo_configs) {
+    std::cout << tree1 + " with " + tree.treename + '\n';
+  } 
+  
+  std::cout << "Pre-processing data..." << std::endl;
   compare_hypotheses c(file1, tree1, alt_hypo_configs, best_by_beam);
   c.set_preserving(preserve_combos);
   c.set_logging(logging);
