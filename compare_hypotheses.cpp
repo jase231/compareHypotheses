@@ -207,53 +207,60 @@ void compare_hypotheses::find_matches() {
 // writes alternative chisq values into new branch. if no match is found, placeholder chisq is written instead.
 // if preserve_combos is false (which is the default), only the most probable combos from the primary tree and their matches are written.
 void compare_hypotheses::write_to_file(std::string out_file) {
-  auto output_df = tree1->df;
   if (out_file == "placeholder") {
-    out_file = num_hypos + "_hypothesesMatched.root";
+    out_file = std::to_string(num_hypos) + "_hypothesesMatched.root";
   }
 
+  float NO_MATCH_INDICATOR = 185100000.0f;
+
+  // write to a computation graph node instead of the actual RDF
+  ROOT::RDF::RNode df_node = tree1->df;
+
+  // loop over all alternative hypotheses; add a new branch for each's alt chisqs
   for (int i = 0; i < alt_hypos.size(); i++) {
     hypothesis_tree_base* alt_tree = alt_hypos[i];
-    auto NEW_BRANCH_NAME = alt_tree->get_tree_name() + "_chisq_ndf";
-    float NO_MATCH_INDICATOR = 185100000.0f;
+    auto branchName = alt_tree->get_tree_name() + "_chisq_ndf";
 
     if (match_by_best_per_beam) {
       auto& matched_chi_sqs_ref = matched_chi_sqs_by_beam[i];
-      auto& tree1_event_map = tree1->event_beam_as_key_map;
-      
-      output_df
-        // create new branch for the matched chisq values, fill it with the matched chisq values or placeholder if no match is found
-        .Define(NEW_BRANCH_NAME, [&matched_chi_sqs_ref, NO_MATCH_INDICATOR](unsigned long long event, unsigned beam) {
-          if (matched_chi_sqs_ref.find(std::make_pair(event, beam)) != matched_chi_sqs_ref.end()) {
-            return matched_chi_sqs_ref[std::make_pair(event, beam)];
-          } else {
-            return NO_MATCH_INDICATOR;    // using large number to indicate no match
-          }
-        }, {"event", "beam_beamid"})
-        // preserve only the lowest chisq combo per event ID & beam ID if preserveCombos is false
-        .Filter([&matched_chi_sqs_ref, &tree1_event_map, this](unsigned long long event, unsigned beam, float kin_chisq) {
-          return chi_sqs_equal(kin_chisq, tree1_event_map[std::make_pair(event, beam)].get_chi_sq()) || preserve_combos;
-        }, {"event", "beam_beamid", "kin_chisq"});
-      continue;
+      df_node = df_node.Define(branchName,
+                     [matched_chi_sqs_ref, NO_MATCH_INDICATOR](unsigned long long event, unsigned beam) -> float {
+                       auto key = std::make_pair(event, beam);
+                       if (matched_chi_sqs_ref.find(key) != matched_chi_sqs_ref.end()) {
+                         return matched_chi_sqs_ref.at(key);
+                       }
+                       return NO_MATCH_INDICATOR;
+                     },
+                     {"event", "beam_beamid"});
+    } else {
+      auto& matched_chi_sqs_ref = matched_chi_sqs[i];
+      df_node = df_node.Define(branchName,
+                     [matched_chi_sqs_ref, NO_MATCH_INDICATOR](unsigned long long event) -> float {
+                       if (matched_chi_sqs_ref.find(event) != matched_chi_sqs_ref.end()) {
+                         return matched_chi_sqs_ref.at(event);
+                       }
+                       return NO_MATCH_INDICATOR;
+                     },
+                     {"event"});
     }
-    
-    // matching by best overall combo
-    auto& matched_chi_sqs_ref = matched_chi_sqs[i];
-    auto& tree1_event_map = tree1->event_as_key_map;
+  }
 
-    output_df
-      // create new branch for the matched chisq values, fill it with the matched chisq values or placeholder if no match is found
-      .Define(NEW_BRANCH_NAME, [&matched_chi_sqs_ref, NO_MATCH_INDICATOR](unsigned long long event) {
-        if (matched_chi_sqs_ref.find(event) != matched_chi_sqs_ref.end()) {
-          return matched_chi_sqs_ref[event];
-        } else {
-          return NO_MATCH_INDICATOR;    // using large number to indicate no match
-        }
-      }, {"event"})
-      // preserve only the lowest chisq combo per event ID if preserveCombos is false
-      .Filter([&matched_chi_sqs_ref, &tree1_event_map, this](unsigned long long event, float kin_chisq) {
-        return chi_sqs_equal(kin_chisq, tree1_event_map[event].get_chi_sq()) || preserve_combos;
+  // preserve only the lowest chisq combo per event ID & beam ID if preserveCombos is false
+  if (match_by_best_per_beam) {
+    auto& tree1_event_map = tree1->event_beam_as_key_map;
+    df_node = df_node.Filter([this, &tree1_event_map](unsigned long long event, unsigned beam, float kin_chisq) -> bool {
+          return preserve_combos || 
+                 chi_sqs_equal(kin_chisq, tree1_event_map.at(std::make_pair(event, beam)).get_chi_sq());
+    }, {"event", "beam_beamid", "kin_chisq"});
+  } else {
+  // preserve only the lowest chisq combo per event ID if preserveCombos is false
+    auto& tree1_event_map = tree1->event_as_key_map;
+    df_node = df_node.Filter([this, &tree1_event_map](unsigned long long event, float kin_chisq) -> bool {
+          return preserve_combos ||
+                 chi_sqs_equal(kin_chisq, tree1_event_map.at(event).get_chi_sq());
     }, {"event", "kin_chisq"});
   }
-  output_df.Snapshot("hypothesesMatched", out_file);
+
+  // process the RNodes and write to file
+  df_node.Snapshot("hypothesesMatched", out_file);
 }
