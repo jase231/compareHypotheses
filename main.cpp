@@ -41,12 +41,12 @@ int main(int argc, char* argv[]) {
 
 
   std::string tree1 = reader.Get("1", "tree", "");
-  std::string file1 = reader.Get("1", "file", "");
-  if (file1.empty() || tree1.empty()) {
+  std::string glob1 = reader.Get("1", "glob", "");
+  if (glob1.empty() || tree1.empty()) {
     std::cerr << "Primary hypothesis parameters missing. Please enter the primary hypotheses' filename and treename in the config.\n";
     return 1;
   }
-  Tree_config primary = {tree1, file1};
+  Tree_config primary = {tree1, glob1};
 
   // get number of alternative hypotheses
   int num_alt_hypos = reader.GetInteger("1", "num_alt_hypos", 1);
@@ -54,15 +54,15 @@ int main(int argc, char* argv[]) {
   alt_hypo_configs.reserve(num_alt_hypos);
   for (int i = 0; i < num_alt_hypos; i++) {
     std::string num_as_string = std::to_string(i+2);
-    std::string file = reader.Get(num_as_string, "file", "");
+    std::string glob = reader.Get(num_as_string, "glob", "");
     std::string tree = reader.Get(num_as_string, "tree", "");
 
-    if (file.empty() || tree.empty()) {
-      std::cerr << "At least one alternative hypothesis parameter is missing. Please ensure you entered filenames and treenames for the number of hypotheses you indicated in the config.\n";
+    if (glob.empty() || tree.empty()) {
+      std::cerr << "At least one alternative hypothesis parameter is missing. Please ensure you entered the filenames' glob and treenames for the number of hypotheses you indicated in the config.\n";
       return 1;
     }
 
-    alt_hypo_configs.push_back({file, tree});
+    alt_hypo_configs.push_back({glob, tree});
   }
 
   if (best_by_beam) {
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
   } 
   
   std::cout << "Pre-processing data..." << std::endl;
-  compare_hypotheses c(file1, tree1, alt_hypo_configs, best_by_beam);
+  compare_hypotheses c(glob1, tree1, alt_hypo_configs, best_by_beam);
   c.set_preserving(preserve_combos);
   c.set_logging(logging);
   c.set_match_by_beam(best_by_beam);

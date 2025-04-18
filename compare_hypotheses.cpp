@@ -16,8 +16,8 @@
 #include <limits>
 
 // constructor for the hypothesis trees. passes input directly to RDataFrame constructor.
-hypothesis_tree_base::hypothesis_tree_base(std::string file_name, std::string tree_name, bool match_type)
-    : df(ROOT::RDataFrame(tree_name, file_name)), 
+hypothesis_tree_base::hypothesis_tree_base(std::string glob, std::string tree_name, bool match_type)
+    : df(ROOT::RDataFrame(tree_name, glob)),
       tree_name(tree_name),
       match_by_best_per_beam(match_type) {}
 
@@ -90,7 +90,7 @@ void hypothesis_tree_best_per_beam::filter_high_chi_sq_events() {
 }
 
 // constructor for compare_hypotheses manager class. initializes two hypothesisTrees and the match counter.
-compare_hypotheses::compare_hypotheses(std::string file_1, std::string tree_1, std::vector<Tree_config> alt_hypo_configs, bool match_type) 
+compare_hypotheses::compare_hypotheses(std::string file_1, std::string tree_1, std::vector<Tree_config> alt_hypo_configs, bool match_type)
     : matches(0), match_by_best_per_beam(match_type), num_hypos(alt_hypo_configs.size()) {
   if (match_by_best_per_beam) {
     tree1 = new hypothesis_tree_best_per_beam(file_1, tree_1, match_by_best_per_beam);
@@ -112,7 +112,7 @@ compare_hypotheses::compare_hypotheses(std::string file_1, std::string tree_1, s
 void compare_hypotheses::prepare_data() {
   tree1->fill_column_vecs();
   tree1->filter_high_chi_sq_events();
-  
+
   for (hypothesis_tree_base* tree : alt_hypos) {
     tree->fill_column_vecs();
     tree->filter_high_chi_sq_events();
@@ -144,17 +144,17 @@ void compare_hypotheses::find_matches() {
   // match_by_best_per_beam true, match by best combo per beam ID
   if (match_by_best_per_beam) {
     for (hypothesis_tree_base* alt_tree : alt_hypos) {
-      std::cout << "Number of unfiltered events in tree1: " << tree1->event_column_data.size() 
+      std::cout << "Number of unfiltered events in tree1: " << tree1->event_column_data.size()
       << " Number of unfiltered events in tree2: " << alt_tree->event_column_data.size() << std::endl;
       std::map<std::pair<unsigned long long, unsigned>, float> match_map;
       for (const auto& pair : tree1->event_beam_as_key_map) {
         // get iterator
         auto alt_tree_it = alt_tree->event_beam_as_key_map.find(pair.first);
-        
+
         // check if key exists
         if (alt_tree_it != alt_tree->event_beam_as_key_map.end()) {
           const combo& alt_combo = alt_tree_it->second;
-          
+
           // run ID match check
           if (alt_combo.get_run() != pair.second.get_run()) { continue; }
 
@@ -162,7 +162,7 @@ void compare_hypotheses::find_matches() {
           match_map[pair.first] = alt_combo.get_chi_sq() / alt_combo.get_ndf();
           matches++;
           if (logging) {
-            os << "Event ID: " << (pair.first).first 
+            os << "Event ID: " << (pair.first).first
               << " found in both trees. Run IDs: " << pair.second.get_run() << ',' << alt_combo.get_run()
               << " Beam IDs: " << pair.second.get_beam_id() << ',' << alt_combo.get_beam_id() << '\n';
           }
@@ -181,19 +181,19 @@ void compare_hypotheses::find_matches() {
     for (const auto& pair : tree1->event_as_key_map) {
       // get iterator
       auto alt_tree_it = alt_tree->event_as_key_map.find(pair.first);
-      
+
       if (alt_tree_it != alt_tree->event_as_key_map.end()) {
         const combo& alt_combo = alt_tree_it->second;
-        
+
         // run ID match check
         if (alt_combo.get_run() != pair.second.get_run()) { continue; }
 
         // store the match
         match_map[pair.first] = alt_combo.get_chi_sq() / alt_combo.get_ndf();
         matches++;
-        
+
         if (logging) {
-          os << "Event ID: " << pair.first 
+          os << "Event ID: " << pair.first
             << " found in both trees. Run IDs: " << pair.second.get_run() << ',' << alt_combo.get_run()
             << " Beam IDs: " << pair.second.get_beam_id() << ',' << alt_combo.get_beam_id() << '\n';
         }
@@ -201,7 +201,7 @@ void compare_hypotheses::find_matches() {
     }
     matched_chi_sqs.push_back(match_map);
   }
-  if (logging) { os.close(); }  
+  if (logging) { os.close(); }
 }
 
 // writes alternative chisq values into new branch. if no match is found, placeholder chisq is written instead.
@@ -249,7 +249,7 @@ void compare_hypotheses::write_to_file(std::string out_file) {
   if (match_by_best_per_beam) {
     auto& tree1_event_map = tree1->event_beam_as_key_map;
     df_node = df_node.Filter([this, &tree1_event_map](unsigned long long event, unsigned beam, float kin_chisq) -> bool {
-          return preserve_combos || 
+          return preserve_combos ||
                  chi_sqs_equal(kin_chisq, tree1_event_map.at(std::make_pair(event, beam)).get_chi_sq());
     }, {"event", "beam_beamid", "kin_chisq"});
   } else {

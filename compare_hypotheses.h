@@ -44,7 +44,7 @@ struct combo {
 
 class hypothesis_tree_base {
   public:
-    hypothesis_tree_base(std::string file_name, std::string tree_name, bool match_type);
+    hypothesis_tree_base(std::string file_glob, std::string tree_name, bool match_type);
     virtual ~hypothesis_tree_base() = default;
     // data preperation functions
     virtual void update_combo_data(size_t index) = 0;
@@ -83,14 +83,14 @@ class hypothesis_tree_base {
 
 class hypothesis_tree_best_combo : public hypothesis_tree_base {
   public:
-    hypothesis_tree_best_combo(std::string file_name, std::string tree_name, bool match_type) : hypothesis_tree_base(file_name, tree_name, match_type) {}
+    hypothesis_tree_best_combo(std::string file_glob, std::string tree_name, bool match_type) : hypothesis_tree_base(file_glob, tree_name, match_type) {}
     void update_combo_data(size_t index) override;
     void filter_high_chi_sq_events() override; 
 };
 
 class hypothesis_tree_best_per_beam : public hypothesis_tree_base {
   public:
-    hypothesis_tree_best_per_beam(std::string file_name, std::string tree_name, bool match_type) : hypothesis_tree_base(file_name, tree_name, match_type) {}
+    hypothesis_tree_best_per_beam(std::string file_glob, std::string tree_name, bool match_type) : hypothesis_tree_base(file_glob, tree_name, match_type) {}
     void update_combo_data(size_t index) override;
     void filter_high_chi_sq_events() override;
 };
@@ -104,7 +104,7 @@ class compare_hypotheses {
     bool match_by_best_per_beam;          // whether matching by best combo per beam is used
     bool preserve_combos = false;         // whether to keep combos with high chisq in the output file
   public:
-    compare_hypotheses(std::string file1, std::string tree1, std::vector<Tree_config> alt_hypo_configs, bool match_type);
+    compare_hypotheses(std::string glob1, std::string tree1, std::vector<Tree_config> alt_hypo_configs, bool match_type);
     
     // calls each tree's data preperation functions
     void prepare_data();
