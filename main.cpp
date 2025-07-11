@@ -32,35 +32,52 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   
-  // read primary and secondary configs
-  std::string file1 = reader.Get("Primary", "file", "");
-  std::string file2 = reader.Get("Secondary", "file", "");
-
-  std::string tree1 = reader.Get("Primary", "tree", "");
-  std::string tree2 = reader.Get("Secondary", "tree", "");
-
   // optional configs
   std::string out_file = reader.Get("Misc", "outfile", "placeholder");
   bool best_by_beam = reader.GetBoolean("Misc", "best_per_beam", false);
   bool preserve_combos = reader.GetBoolean("Misc", "preserve_combos", false);
   bool logging = reader.GetBoolean("Misc", "logging", false);
 
-  // validate config
-  if (file1.empty() || file2.empty() || tree1.empty() || tree2.empty()) {
-    std::cerr << "Missing required parameters in config file.\n";
-    std::cerr << "Required sections/keys:\n";
-    std::cerr << "[Primary]\nfile = ...\ntree = ...\n\n";
-    std::cerr << "[Secondary]\nfile = ...\ntree = ...\n";
+
+
+  std::string tree1 = reader.Get("1", "tree", "");
+  std::string glob1 = reader.Get("1", "glob", "");
+  if (glob1.empty() || tree1.empty()) {
+    std::cerr << "Primary hypothesis parameters missing. Please enter the primary hypotheses' filename and treename in the config.\n";
     return 1;
-}
+  }
+  Tree_config primary = {tree1, glob1};
+
+  // get number of alternative hypotheses
+  int num_alt_hypos = reader.GetInteger("1", "num_alt_hypos", 1);
+  std::vector<Tree_config> alt_hypo_configs;
+  alt_hypo_configs.reserve(num_alt_hypos);
+  for (int i = 0; i < num_alt_hypos; i++) {
+    std::string num_as_string = std::to_string(i+2);
+    std::string glob = reader.Get(num_as_string, "glob", "");
+    std::string tree = reader.Get(num_as_string, "tree", "");
+
+    if (glob.empty() || tree.empty()) {
+      std::cerr << "At least one alternative hypothesis parameter is missing. Please ensure you entered the filenames' glob and treenames for the number of hypotheses you indicated in the config.\n";
+      return 1;
+    }
+
+    alt_hypo_configs.push_back({glob, tree});
+  }
 
   if (best_by_beam) {
     std::cout << "Running in best combo per beam ID mode.\n";
   } else {
     std::cout << "Running in best overall combo mode.\n";
   }
+  
+  std::cout << "Comparing:\n";
+  for (Tree_config tree : alt_hypo_configs) {
+    std::cout << tree1 + " with " + tree.treename + '\n';
+  } 
+  
   std::cout << "Pre-processing data..." << std::endl;
-  compare_hypotheses c(file1, tree1, file2, tree2, best_by_beam);
+  compare_hypotheses c(glob1, tree1, alt_hypo_configs, best_by_beam);
   c.set_preserving(preserve_combos);
   c.set_logging(logging);
   c.set_match_by_beam(best_by_beam);

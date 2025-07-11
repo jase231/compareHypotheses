@@ -14,6 +14,11 @@
 #include <cstddef>
 #include <chrono>
 
+struct Tree_config {
+  std::string filename;
+  std::string treename;
+};
+
 struct combo {
   public:
     // getters for member data
@@ -39,7 +44,7 @@ struct combo {
 
 class hypothesis_tree_base {
   public:
-    hypothesis_tree_base(std::string file_name, std::string tree_name, bool match_type);
+    hypothesis_tree_base(std::string file_glob, std::string tree_name, bool match_type);
     virtual ~hypothesis_tree_base() = default;
     // data preperation functions
     virtual void update_combo_data(size_t index) = 0;
@@ -78,14 +83,14 @@ class hypothesis_tree_base {
 
 class hypothesis_tree_best_combo : public hypothesis_tree_base {
   public:
-    hypothesis_tree_best_combo(std::string file_name, std::string tree_name, bool match_type) : hypothesis_tree_base(file_name, tree_name, match_type) {}
+    hypothesis_tree_best_combo(std::string file_glob, std::string tree_name, bool match_type) : hypothesis_tree_base(file_glob, tree_name, match_type) {}
     void update_combo_data(size_t index) override;
     void filter_high_chi_sq_events() override; 
 };
 
 class hypothesis_tree_best_per_beam : public hypothesis_tree_base {
   public:
-    hypothesis_tree_best_per_beam(std::string file_name, std::string tree_name, bool match_type) : hypothesis_tree_base(file_name, tree_name, match_type) {}
+    hypothesis_tree_best_per_beam(std::string file_glob, std::string tree_name, bool match_type) : hypothesis_tree_base(file_glob, tree_name, match_type) {}
     void update_combo_data(size_t index) override;
     void filter_high_chi_sq_events() override;
 };
@@ -94,12 +99,12 @@ class hypothesis_tree_best_per_beam : public hypothesis_tree_base {
 class compare_hypotheses {
   private:
     hypothesis_tree_base* tree1;
-    hypothesis_tree_base* tree2;
+    std::vector<hypothesis_tree_base*> alt_hypos;
     bool logging = false;                 // whether logs of matches are written to file
-    bool match_by_best_per_beam;  // whether matching by best combo per beam is used
+    bool match_by_best_per_beam;          // whether matching by best combo per beam is used
     bool preserve_combos = false;         // whether to keep combos with high chisq in the output file
   public:
-    compare_hypotheses(std::string file1, std::string tree1, std::string file2, std::string tree2, bool match_type);
+    compare_hypotheses(std::string glob1, std::string tree1, std::vector<Tree_config> alt_hypo_configs, bool match_type);
     
     // calls each tree's data preperation functions
     void prepare_data();
@@ -115,17 +120,22 @@ class compare_hypotheses {
 
     // counter for number of matches
     uint matches;
+    uint num_hypos;
 
     // maps for storing chisq of matched combos from secondary tree
-    std::map<std::pair<unsigned long long, unsigned>, float> matched_chi_sqs_by_beam;
-    std::map<unsigned long long, float> matched_chi_sqs;
+    //std::map<std::pair<unsigned long long, unsigned>, float> matched_chi_sqs_by_beam;
+    //std::map<unsigned long long, float> matched_chi_sqs;
+
+    //vectors for storing all hypotheses' matches
+    std::vector<std::map<std::pair<unsigned long long, unsigned>, float>> matched_chi_sqs_by_beam;
+    std::vector<std::map<unsigned long long, float>> matched_chi_sqs;
 
     // helpers and member data setters
     bool is_logging() const { return logging; }
     void set_logging(bool l) { 
       logging = l;
       tree1->set_logging(l);
-      tree2->set_logging(l);
+      for (hypothesis_tree_base* tree : alt_hypos) { tree->set_logging(l); }
     }
 
     bool is_preserving() const { return preserve_combos; }
@@ -135,8 +145,8 @@ class compare_hypotheses {
     void set_match_by_beam(bool m) { 
       match_by_best_per_beam = m;
       tree1->set_match_by_beam(m);
-      tree2->set_match_by_beam(m);
+      for (hypothesis_tree_base* tree : alt_hypos) { tree->set_match_by_beam(m); }
     }
 
-    ~compare_hypotheses() { delete tree1; delete tree2; }
+    ~compare_hypotheses() { delete tree1; for(hypothesis_tree_base* tree : alt_hypos) { delete tree; } }
 };
