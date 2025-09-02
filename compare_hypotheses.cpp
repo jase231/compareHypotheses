@@ -255,25 +255,21 @@ void compare_hypotheses::write_to_file(std::string out_file) {
       auto& matched_chi_sqs_ref = matched_chi_sqs_by_beam[i];
       df_node = df_node.Define(
           branchName,
-          [matched_chi_sqs_ref, NO_MATCH_INDICATOR](unsigned long long event,
-                                                    unsigned beam) -> float {
+          [&matched_chi_sqs_ref, NO_MATCH_INDICATOR](unsigned long long event,
+                                                     unsigned beam) -> float {
             auto key = std::make_pair(event, beam);
-            if (matched_chi_sqs_ref.find(key) != matched_chi_sqs_ref.end()) {
-              return matched_chi_sqs_ref.at(key);
-            }
-            return NO_MATCH_INDICATOR;
+            auto it = matched_chi_sqs_ref.find(key);
+            return it != matched_chi_sqs_ref.end() ? it->second : NO_MATCH_INDICATOR;
           },
           {"event", "beam_beamid"});
     } else {
       auto& matched_chi_sqs_ref = matched_chi_sqs[i];
       df_node = df_node.Define(
           branchName,
-          [matched_chi_sqs_ref,
+          [&matched_chi_sqs_ref,
            NO_MATCH_INDICATOR](unsigned long long event) -> float {
-            if (matched_chi_sqs_ref.find(event) != matched_chi_sqs_ref.end()) {
-              return matched_chi_sqs_ref.at(event);
-            }
-            return NO_MATCH_INDICATOR;
+            auto it = matched_chi_sqs_ref.find(event);
+            return it != matched_chi_sqs_ref.end() ? it->second : NO_MATCH_INDICATOR;
           },
           {"event"});
     }
