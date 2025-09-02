@@ -1,7 +1,7 @@
 #include "compare_hypotheses.h"
 
-#include <fstream>
 #include <cmath>
+#include <fstream>
 
 // constructor for the hypothesis trees. passes input directly to RDataFrame
 // constructor.
@@ -10,7 +10,8 @@ hypothesis_tree_base::hypothesis_tree_base(std::string glob,
                                            bool match_type)
     : df(ROOT::RDataFrame(tree_name, glob)),
       tree_name(tree_name),
-      match_by_best_per_beam(match_type) {}
+      match_by_best_per_beam(match_type),
+      logging(false) {}
 
 // same as containsEventID() but uses std::pair as key. to be replaced with
 // template.
