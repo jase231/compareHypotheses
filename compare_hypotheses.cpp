@@ -100,6 +100,7 @@ compare_hypotheses::compare_hypotheses(
   if (match_by_best_per_beam) {
     tree1 = new hypothesis_tree_best_per_beam(file_1, tree_1,
                                               match_by_best_per_beam);
+    alt_hypos.reserve(num_hypos);
     for (Tree_config& config : alt_hypo_configs) {
       alt_hypos.push_back(new hypothesis_tree_best_per_beam(
           config.filename, config.treename, match_by_best_per_beam));
@@ -108,6 +109,7 @@ compare_hypotheses::compare_hypotheses(
   } else {
     tree1 =
         new hypothesis_tree_best_combo(file_1, tree_1, match_by_best_per_beam);
+    alt_hypos.reserve(num_hypos);
     for (Tree_config& config : alt_hypo_configs) {
       alt_hypos.push_back(new hypothesis_tree_best_combo(
           config.filename, config.treename, match_by_best_per_beam));
