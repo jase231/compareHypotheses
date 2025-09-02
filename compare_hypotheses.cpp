@@ -259,19 +259,21 @@ void compare_hypotheses::write_to_file(std::string out_file) {
                                                      unsigned beam) -> float {
             auto key = std::make_pair(event, beam);
             auto it = matched_chi_sqs_ref.find(key);
-            return it != matched_chi_sqs_ref.end() ? it->second : NO_MATCH_INDICATOR;
+            return it != matched_chi_sqs_ref.end() ? it->second
+                                                   : NO_MATCH_INDICATOR;
           },
           {"event", "beam_beamid"});
     } else {
       auto& matched_chi_sqs_ref = matched_chi_sqs[i];
-      df_node = df_node.Define(
-          branchName,
-          [&matched_chi_sqs_ref,
-           NO_MATCH_INDICATOR](unsigned long long event) -> float {
-            auto it = matched_chi_sqs_ref.find(event);
-            return it != matched_chi_sqs_ref.end() ? it->second : NO_MATCH_INDICATOR;
-          },
-          {"event"});
+      df_node = df_node.Define(branchName,
+                               [&matched_chi_sqs_ref, NO_MATCH_INDICATOR](
+                                   unsigned long long event) -> float {
+                                 auto it = matched_chi_sqs_ref.find(event);
+                                 return it != matched_chi_sqs_ref.end()
+                                            ? it->second
+                                            : NO_MATCH_INDICATOR;
+                               },
+                               {"event"});
     }
   }
 
