@@ -4,7 +4,7 @@ The GlueX experiment features nearly full angular coverage and can detect both n
 
 ## Features
 
-- Compare chi-squared values between two different reconstruction hypotheses
+- Compare chi-squared values between N different reconstruction hypotheses
 - Support for both best overall combo and best-per-beam-ID matching modes
 - Support for two output modes; one conserving disk-space and one preserving all primary tree events
 - Output includes matched events with corresponding chi-square values
