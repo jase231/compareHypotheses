@@ -126,6 +126,10 @@ void compare_hypotheses::prepare_data() {
   for (hypothesis_tree_base* tree : alt_hypos) {
     tree->fill_column_vecs();
     tree->filter_high_chi_sq_events();
+    if (tree->event_column_data.size() == 0) {
+      std::cout << "WARNING: Tree " << tree->get_tree_name()
+                << " is empty. Did you fill your flat tree?\n";
+    }
   }
 }
 
