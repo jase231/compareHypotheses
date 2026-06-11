@@ -12,7 +12,10 @@ dependencies = []
 
 [tool.scikit-build]
 wheel.packages = ["comp_hyp"]
-cmake.define = { CMAKE_INSTALL_BINDIR = "comp_hyp/bin" }
+
+[tool.scikit-build.cmake.define]
+CMAKE_INSTALL_BINDIR = "comp_hyp/bin" 
+CMAKE_EXE_LINKER_FLAGS = "-Wl,-rpath-link,/home/user/Documents/test/compareHypotheses/.venv/lib/python3.13/site-packages/root.libs"
 
 [project.scripts]
 compare_hypotheses = "comp_hyp:_comp_hyp_wrapper"
