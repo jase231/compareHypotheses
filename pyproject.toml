@@ -1,0 +1,19 @@
+[build-system]
+requires = ["scikit-build-core>=0.10"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "comparehypotheses"
+version = "0.0.1"
+description = "Compare kinematic fit performance for identical events present in analysis trees reconstructed under different kinematic fit hypotheses."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.scikit-build]
+wheel.packages = ["comp_hyp"]
+cmake.define = { CMAKE_INSTALL_BINDIR = "comp_hyp/bin" }
+
+[project.scripts]
+compare_hypotheses = "comp_hyp:_comp_hyp_wrapper"
+
