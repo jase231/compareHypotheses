@@ -5,11 +5,22 @@
    - `cd .venv/lib/python3.13`
    - `ln -s site-packages mock_site_packages`
    - `cd ../../../`
-6. Copy `thisroot.sh` into the PyPI ROOT distribution: `cp thisroot.sh .venv/lib64/python3.13/site-packages/ROOT/bin/`
-7. Execute `thisroot.sh`: `source .venv/lib64/python3.13/site-packages/ROOT/bin/thisroot.sh` (fix python version as needed)
-8. Install the package: `uv pip install .`
-9. Check that that the executable has been built and is linked into PATH: `compare_hypotheses`
-10. Check that the package is available from python: `python`
+5. Copy `thisroot.sh` into the PyPI ROOT distribution: `cp thisroot.sh .venv/lib64/python3.13/site-packages/ROOT/bin/`
+6. Execute `thisroot.sh`: `source .venv/lib64/python3.13/site-packages/ROOT/bin/thisroot.sh` (fix python version as needed)
+
+If building wheel:
+1. `python -m build`
+2. Then, exit your venv, open a fresh directory, copy the wheel there
+3. Create new venv
+4. `uv pip install ROOT`
+5. `uv pip install <comparehypotheses-etc-etc.whl>
+
+If installing the package:
+1. `uv pip install .`
+
+To confirm proper install:
+1. Check that that the executable has been built and is linked into PATH: `compare_hypotheses`
+2. Check that the package is available from python: `python`
 -   `from comp_hyp.test_suite import test_suite`
 -   `test_suite.test_suite()`
 -   To clean, call `python comp_hyp/test_suite/test_suite.py clean`
